@@ -3,29 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D 立體圖形互動教學</title>
+    <title>3D 形狀教學 - 專業版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <style>
         :root {
-            --primary: #6366f1;
-            --secondary: #ec4899;
-            --accent: #f59e0b;
+            --primary: #4f46e5;
+            --secondary: #0ea5e9;
+            --accent: #f59e0b; /* 橘黃色，用於高亮 */
             --dark: #0f172a;
-            --light: #f8fafc;
-            --glass: rgba(255, 255, 255, 0.85);
+            --glass: rgba(255, 255, 255, 0.9);
         }
 
         body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--dark);
-            color: #333;
+            margin: 0; overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--dark); color: #333;
         }
         
-        /* 3D Canvas */
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top:0; left:0; z-index: 1; }
 
         /* UI Layer */
@@ -35,148 +30,92 @@
             display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        /* 頂部導航 */
+        /* Header */
         header { 
-            pointer-events: auto; 
-            padding: 15px 25px; 
-            background: var(--glass); 
-            backdrop-filter: blur(10px);
-            display: flex; justify-content: space-between; align-items: center;
+            pointer-events: auto; padding: 15px 20px; margin: 15px;
+            background: var(--glass); backdrop-filter: blur(10px);
+            border-radius: 16px; display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin: 15px;
-            border-radius: 16px;
         }
-
-        h1 { margin: 0; font-size: 1.2rem; background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
         
-        .nav-pills { display: flex; background: #e2e8f0; padding: 4px; border-radius: 12px; gap: 5px; }
-        .nav-btn { 
-            border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; color: #64748b; background: transparent; transition: all 0.3s ease; 
-        }
-        .nav-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .mode-switch { background: #e2e8f0; padding: 4px; border-radius: 10px; display: flex; gap: 4px; }
+        .mode-btn { border: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #64748b; background: transparent; cursor: pointer; transition: 0.2s; }
+        .mode-btn.active { background: white; color: var(--primary); shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        /* 底部控制列 */
+        /* Controls (Bottom) */
         .controls-bar {
-            pointer-events: auto;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            margin: 0 15px 20px 15px;
-            padding: 15px;
-            border-radius: 16px;
+            pointer-events: auto; background: var(--glass); backdrop-filter: blur(10px);
+            margin: 0 15px 20px 15px; padding: 12px; border-radius: 20px;
             display: flex; gap: 10px; overflow-x: auto; justify-content: center;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
         }
-        
         .shape-btn {
-            background: white; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 50px;
-            cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #475569; white-space: nowrap;
-            transition: transform 0.2s, border-color 0.2s;
-            display: flex; align-items: center; gap: 6px;
+            background: white; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 30px;
+            cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #475569; white-space: nowrap;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
         }
-        .shape-btn:hover { transform: translateY(-2px); border-color: var(--primary); }
-        .shape-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .shape-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .shape-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* 資訊面板 (右上角) */
+        /* Info Card (Right) */
         .info-card {
-            pointer-events: auto;
-            position: absolute; top: 90px; right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(8px);
+            pointer-events: auto; position: absolute; top: 90px; right: 20px; width: 260px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
             padding: 20px; border-radius: 16px;
-            width: 280px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: opacity 0.3s;
         }
-        .info-card h2 { margin: 0 0 10px 0; color: var(--primary); font-size: 1.4rem; }
-        .info-card p { margin: 0; color: #475569; line-height: 1.5; font-size: 0.95rem; }
+        .info-card h2 { margin: 0 0 8px 0; color: var(--primary); font-size: 1.3rem; }
+        .info-card p { margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.5; }
+        .hint-text { margin-top: 15px; padding-top:10px; border-top: 1px solid #eee; font-size: 0.8rem; color: #94a3b8; }
         .hidden { opacity: 0; pointer-events: none; }
 
-        /* 滑鼠跟隨提示 (Tooltip) */
+        /* Tooltip (Cursor Follower) */
         #cursor-tooltip {
-            position: fixed;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            pointer-events: none;
-            z-index: 100;
-            display: none;
-            transform: translate(15px, 15px);
-            white-space: nowrap;
+            position: fixed; background: rgba(15, 23, 42, 0.9); color: white;
+            padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; pointer-events: none;
+            z-index: 100; display: none; transform: translate(15px, 15px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2);
         }
-        #cursor-tooltip span { color: var(--accent); font-weight: bold; }
 
-        /* 遊戲模式 Overlay */
+        /* Game UI */
         #game-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark);
-            z-index: 20;
-            display: none;
+            background: var(--dark); z-index: 20; display: none;
             flex-direction: column; align-items: center; justify-content: center;
         }
         #game-layer.active { display: flex; }
-
-        .quiz-container {
-            background: white; width: 90%; max-width: 450px;
-            border-radius: 24px; padding: 30px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            position: relative;
-        }
-        .score-pill {
-            background: #f1f5f9; color: var(--primary); 
-            padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
-            display: inline-block; margin-bottom: 20px;
-        }
-
-        .q-display { min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 25px; }
-        .q-icon { font-size: 4rem; display: block; margin-bottom: 10px; }
-        .q-text { font-size: 1.3rem; font-weight: bold; color: #1e293b; line-height: 1.4; }
-        .q-sub { font-size: 0.9rem; color: #64748b; margin-top: 5px; }
-
-        .answers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .ans-btn {
-            background: white; border: 2px solid #e2e8f0; border-radius: 16px;
-            padding: 15px 10px; cursor: pointer; transition: all 0.2s;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-        }
-        .ans-btn h4 { margin: 0; font-size: 0.9rem; color: #475569; }
-        .ans-btn:active { transform: scale(0.95); }
+        
+        .quiz-box { background: white; width: 90%; max-width: 420px; border-radius: 20px; padding: 30px; text-align: center; }
+        .quiz-score { background: #f1f5f9; color: var(--primary); padding: 5px 15px; border-radius: 20px; display: inline-block; font-weight: bold; margin-bottom: 20px; }
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .ans-btn { padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .ans-btn:hover { background: #f8fafc; }
         .ans-btn.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
         .ans-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
 
-        /* RWD */
-        @media (max-width: 600px) {
-            .controls-bar { justify-content: flex-start; } /* 可橫向捲動 */
-            .info-card { top: auto; bottom: 100px; right: 15px; left: 15px; width: auto; }
-            .q-text { font-size: 1.1rem; }
-        }
     </style>
 </head>
 <body>
 
     <div id="canvas-container"></div>
-    
     <div id="cursor-tooltip"></div>
 
     <div id="ui-layer">
         <header>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <h1>🔷 形狀探索</h1>
-            </div>
-            <div class="nav-pills">
-                <button class="nav-btn active" onclick="setMode('explore')">觀察模式</button>
-                <button class="nav-btn" onclick="setMode('game')">挑戰模式</button>
+            <div class="brand">🧊 3D 圖形實驗室</div>
+            <div class="mode-switch">
+                <button class="mode-btn active" onclick="setMode('explore')">觀察</button>
+                <button class="mode-btn" onclick="setMode('game')">挑戰</button>
             </div>
         </header>
 
         <div class="info-card" id="infoCard">
-            <h2 id="infoTitle">正方體</h2>
+            <h2 id="infoTitle">載入中...</h2>
             <p id="infoDesc">...</p>
-            <div style="margin-top:15px; font-size:0.8rem; color:#94a3b8;">
-                💡 試著將滑鼠移到<span style="color:var(--secondary)">頂點</span>或<span style="color:var(--primary)">面</span>上
+            <div class="hint-text">
+                💡 試著將滑鼠移到圖形的 <b>邊</b>、<b>面</b> 或 <b>角</b> 上，看看會發生什麼事！
             </div>
         </div>
 
@@ -191,269 +130,82 @@
     </div>
 
     <div id="game-layer">
-        <div class="quiz-container">
-            <div class="score-pill">⭐ 得分: <span id="scoreVal">0</span></div>
+        <div class="quiz-box">
+            <div class="quiz-score">⭐ 得分: <span id="scoreVal">0</span></div>
+            <div style="font-size: 4rem; margin: 10px 0;" id="qIcon">📦</div>
+            <h2 id="qText">題目</h2>
+            <p id="qSub" style="color:#64748b; font-size:0.9rem;"></p>
             
-            <div class="q-display">
-                <span class="q-icon" id="qIcon"></span>
-                <div class="q-text" id="qText">題目載入中...</div>
-                <div class="q-sub" id="qSub"></div>
-            </div>
-
-            <div class="answers-grid">
-                <button class="ans-btn" onclick="answer('prism')">
-                    <span style="font-size:1.5rem">🧊</span>
-                    <h4>柱體</h4>
-                </button>
-                <button class="ans-btn" onclick="answer('pyramid')">
-                    <span style="font-size:1.5rem">⛺</span>
-                    <h4>錐體</h4>
-                </button>
-                <button class="ans-btn" onclick="answer('sphere')">
-                    <span style="font-size:1.5rem">⚽</span>
-                    <h4>球體</h4>
-                </button>
+            <div class="ans-grid">
+                <button class="ans-btn" onclick="answer('prism')">柱體</button>
+                <button class="ans-btn" onclick="answer('pyramid')">錐體</button>
+                <button class="ans-btn" onclick="answer('sphere')">球體</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === 1. 資料庫 ===
-        const shapeData = {
-            cube: { title: "正方體 (Cube)", desc: "有 6 個平的面，每個面都是正方形。有 8 個頂點，12 條邊。" },
-            cylinder: { title: "圓柱體 (Cylinder)", desc: "上下兩個底面是圓形。側面是一個曲面。沒有頂點。" },
-            cone: { title: "圓錐體 (Cone)", desc: "有一個圓形的底面。側面縮小到一個尖頂 (頂點)。" },
-            sq_pyramid: { title: "四角錐 (Square Pyramid)", desc: "底面是正方形。有 4 個三角形的側面，匯聚於一個頂點。" },
-            tri_prism: { title: "三角柱 (Triangular Prism)", desc: "上下底面是三角形。側面是 3 個長方形。" },
-            sphere: { title: "球體 (Sphere)", desc: "完全圓滑。沒有平面、邊或頂點。表面上一點到中心的距離相等。" }
+        // === 1. 圖形數據 ===
+        const shapeDB = {
+            cube: { title: "正方體 (Cube)", desc: "由 6 個正方形平面組成。擁有 12 條邊和 8 個頂點。" },
+            cylinder: { title: "圓柱體 (Cylinder)", desc: "上下底面是圓形。側面是光滑曲面。沒有頂點，有 2 條曲線邊。" },
+            cone: { title: "圓錐體 (Cone)", desc: "底部是圓形，側面縮小至一個尖頂。有 1 個頂點。" },
+            sq_pyramid: { title: "四角錐 (Sq. Pyramid)", desc: "底部是正方形，側面是 4 個三角形。有 5 個頂點，8 條邊。" },
+            tri_prism: { title: "三角柱 (Tri. Prism)", desc: "底部是三角形，側面是 3 個長方形。有 6 個頂點，9 條邊。" },
+            sphere: { title: "球體 (Sphere)", desc: "完美的圓形立體。沒有平的面，沒有邊，也沒有頂點。" }
         };
 
-        const quizQuestions = [
-            // 圖形題
-            { type: 'icon', content: '📦', text: '快遞紙箱', category: 'prism' },
-            { type: 'icon', content: '🎾', text: '網球', category: 'sphere' },
-            { type: 'icon', content: '🍦', text: '雪糕筒 (不含雪糕)', category: 'pyramid' }, // Cone family
-            { type: 'icon', content: '🥫', text: '罐頭', category: 'prism' }, // Cylinder family
-            { type: 'icon', content: '⛺', text: '露營帳篷', category: 'pyramid' },
-            { type: 'icon', content: '🎲', text: '骰子', category: 'prism' },
-            // 文字題 (新功能)
-            { type: 'text', content: '❓', text: '哪一種圖形有 6 個正方形的面？', sub:'提示：像骰子一樣', category: 'prism' },
-            { type: 'text', content: '❓', text: '哪一種圖形完全沒有頂點和邊？', sub:'提示：會滾來滾去', category: 'sphere' },
-            { type: 'text', content: '❓', text: '哪一種圖形有一個尖尖的頂點和一個圓形底面？', sub:'提示：像派對帽', category: 'pyramid' },
-            { type: 'text', content: '❓', text: '埃及金字塔屬於哪一類？', sub:'底是方形，邊是三角形', category: 'pyramid' }
+        const quizDB = [
+            { type: 'prism', icon: '📦', text: '紙箱', hint: '有平平的面，上下形狀一樣' },
+            { type: 'sphere', icon: '🏀', text: '籃球', hint: '會滾動，沒有角' },
+            { type: 'pyramid', icon: '⛺', text: '帳篷', hint: '上面尖尖的，下面方方的' },
+            { type: 'prism', icon: '🥫', text: '罐頭', hint: '圓柱體屬於廣義的柱體家族' },
+            { type: 'text', cat: 'prism', text: '哪種圖形有 6 個面、8 個角？', hint: '像骰子一樣' },
+            { type: 'text', cat: 'sphere', text: '哪種圖形完全沒有邊和角？', hint: '像彈珠一樣' }
         ];
 
         // === 2. Three.js 初始化 ===
-        let scene, camera, renderer, controls;
-        let raycaster, mouse;
-        let currentGroup = new THREE.Group(); // 包含 mesh, wireframe, vertices
-        let interactiveObjects = []; // 用於 Raycasting 的物件清單
+        let scene, camera, renderer, controls, raycaster, mouse;
+        let currentGroup = new THREE.Group();
+        let interactables = []; // 儲存可互動的物件 (Mesh, Lines, Points)
 
         function init() {
-            // 場景
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f172a); // 深色背景突出光效
+            scene.background = new THREE.Color(0x0f172a);
 
-            // 相機
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
             camera.position.set(0, 2, 5);
 
-            // 渲染
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // 燈光
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-            dirLight.position.set(5, 10, 7);
+            const ambLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 5, 5);
             scene.add(dirLight);
 
-            // 控制
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
 
-            // Raycaster
             raycaster = new THREE.Raycaster();
+            // 關鍵設定：增加線條偵測的寬度 (Threshold)，讓滑鼠更容易指到邊
+            raycaster.params.Line.threshold = 0.2; 
+            
             mouse = new THREE.Vector2();
 
-            // 事件
-            window.addEventListener('resize', onResize);
-            window.addEventListener('mousemove', onMouseMove);
-            // 初始載入
             scene.add(currentGroup);
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            window.addEventListener('mousemove', onMouseMove);
             loadShape('cube');
-            
             animate();
-        }
-
-        // === 3. 形狀建構與互動點 ===
-        function loadShape(type) {
-            // 清除舊物件
-            while(currentGroup.children.length > 0){ 
-                currentGroup.remove(currentGroup.children[0]); 
-            }
-            interactiveObjects = [];
-
-            // UI 更新
-            document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`button[onclick="loadShape('${type}')"]`)?.classList.add('active');
-            
-            // 顯示文字
-            const data = shapeData[type];
-            document.getElementById('infoTitle').innerText = data.title;
-            document.getElementById('infoDesc').innerText = data.desc;
-
-            let geometry;
-            let verticesPos = []; // 儲存頂點位置用於生成感應球
-            let isCurved = false;
-
-            // 定義形狀
-            switch(type) {
-                case 'cube':
-                    geometry = new THREE.BoxGeometry(2, 2, 2);
-                    // 手動定義頂點位置 (8個)
-                    verticesPos = [
-                        [1,1,1], [1,1,-1], [1,-1,1], [1,-1,-1],
-                        [-1,1,1], [-1,1,-1], [-1,-1,1], [-1,-1,-1]
-                    ];
-                    break;
-                case 'cylinder':
-                    geometry = new THREE.CylinderGeometry(1, 1, 2.5, 32);
-                    isCurved = true;
-                    // 圓柱體沒有頂點
-                    break;
-                case 'cone':
-                    geometry = new THREE.ConeGeometry(1.2, 2.5, 32);
-                    geometry.translate(0, 0, 0); // 調整中心
-                    isCurved = true;
-                    verticesPos = [[0, 1.25, 0]]; // 只有一個尖頂
-                    break;
-                case 'sq_pyramid':
-                    // 四角錐：用 ConeGeometry 但只有 4 個分段
-                    geometry = new THREE.ConeGeometry(1.5, 2, 4);
-                    // 旋轉 45 度讓底面邊緣對齊軸線 (看起來更像金字塔)
-                    geometry.rotateY(Math.PI / 4); 
-                    verticesPos = [
-                        [0, 1, 0], // 頂點
-                        [1.06, -1, 1.06], [-1.06, -1, 1.06], [1.06, -1, -1.06], [-1.06, -1, -1.06] // 底角 (近似值)
-                    ];
-                    break;
-                case 'tri_prism':
-                    geometry = new THREE.CylinderGeometry(1.2, 1.2, 2.5, 3);
-                    verticesPos = [
-                        [0, 1.25, 1.2], [1.04, 1.25, -0.6], [-1.04, 1.25, -0.6], // 上
-                        [0, -1.25, 1.2], [1.04, -1.25, -0.6], [-1.04, -1.25, -0.6] // 下
-                    ];
-                    break;
-                case 'sphere':
-                    geometry = new THREE.SphereGeometry(1.3, 32, 32);
-                    isCurved = true;
-                    break;
-            }
-
-            // A. 主體 Mesh (半透明)
-            const material = new THREE.MeshPhongMaterial({ 
-                color: 0x6366f1, 
-                transparent: true, 
-                opacity: 0.8,
-                shininess: 100,
-                side: THREE.DoubleSide
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.userData = { type: 'face', label: isCurved ? '曲面 (Curved Face)' : '平面 (Flat Face)' };
-            
-            // 如果是混合面 (如圓錐有底面和平滑側面)，Raycasting logic 會比較複雜
-            // 為了簡單教學，這裡統稱面。如果是圓錐底面，我們可以用法線判斷，但這裡簡化。
-            if (type === 'cylinder' || type === 'cone') {
-                 // 稍微優化圓柱和圓錐的文字：側面是曲面，底面是平面
-                 // 但單一 mesh 很難區分，除非用多材質。
-                 // 這裡統一提示，依靠文字描述補充。
-            }
-
-            currentGroup.add(mesh);
-            interactiveObjects.push(mesh);
-
-            // B. 邊框 (Wireframe) - 用於視覺輔助和 "邊" 的提示
-            const edges = new THREE.EdgesGeometry(geometry);
-            const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
-            const wireframe = new THREE.LineSegments(edges, lineMat);
-            wireframe.userData = { type: 'edge', label: '邊 (Edge)' }; 
-            // Raycasting lines is hard, so we assume closeness to mesh but not hitting vertex = edge visual
-            currentGroup.add(wireframe);
-
-            // C. 頂點感應球 (Vertex Sensors)
-            const vertexGeo = new THREE.SphereGeometry(0.15); // 稍微大一點方便感應
-            const vertexMat = new THREE.MeshBasicMaterial({ color: 0xec4899, transparent: true, opacity: 0.5 }); // 半透明粉紅
-            const highlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // 高亮白
-
-            verticesPos.forEach(pos => {
-                const vMesh = new THREE.Mesh(vertexGeo, vertexMat);
-                vMesh.position.set(pos[0], pos[1], pos[2]);
-                vMesh.userData = { type: 'vertex', label: '頂點 (Vertex)' };
-                currentGroup.add(vMesh);
-                interactiveObjects.push(vMesh);
-            });
-        }
-
-        // === 4. 互動邏輯 (Raycasting) ===
-        function onMouseMove(event) {
-            // 計算滑鼠在 Canvas 的位置 (-1 到 +1)
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            // 更新 Tooltip 位置
-            const tooltip = document.getElementById('cursor-tooltip');
-            tooltip.style.left = event.clientX + 15 + 'px';
-            tooltip.style.top = event.clientY + 15 + 'px';
-
-            // 只有在觀察模式才運作
-            if (document.getElementById('game-layer').style.display === 'flex') {
-                tooltip.style.display = 'none';
-                return;
-            }
-
-            // 射線檢測
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(interactiveObjects);
-
-            if (intersects.length > 0) {
-                const hit = intersects[0].object;
-                
-                // 優先顯示頂點
-                if (hit.userData.type === 'vertex') {
-                    document.body.style.cursor = 'pointer';
-                    tooltip.innerHTML = `<span>●</span> ${hit.userData.label}`;
-                    tooltip.style.display = 'block';
-                    hit.material.color.set(0xffffff); // 變亮
-                    hit.scale.set(1.5, 1.5, 1.5);
-                } 
-                // 其次顯示面
-                else if (hit.userData.type === 'face') {
-                    document.body.style.cursor = 'help';
-                    tooltip.innerHTML = `<span>■</span> ${hit.userData.label}`;
-                    tooltip.style.display = 'block';
-                }
-            } else {
-                document.body.style.cursor = 'default';
-                tooltip.style.display = 'none';
-                
-                // 重置所有頂點樣式
-                interactiveObjects.forEach(obj => {
-                    if (obj.userData.type === 'vertex') {
-                        obj.material.color.set(0xec4899);
-                        obj.scale.set(1, 1, 1);
-                    }
-                });
-            }
-        }
-
-        function onResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
         function animate() {
@@ -462,75 +214,224 @@
             renderer.render(scene, camera);
         }
 
-        // === 5. 遊戲邏輯 ===
+        // === 3. 生成圖形與互動邏輯 ===
+        function loadShape(type) {
+            // 清除舊圖形
+            while(currentGroup.children.length > 0){ 
+                currentGroup.remove(currentGroup.children[0]); 
+            }
+            interactables = [];
+
+            // UI 更新
+            document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`button[onclick="loadShape('${type}')"]`)?.classList.add('active');
+            document.getElementById('infoTitle').innerText = shapeDB[type].title;
+            document.getElementById('infoDesc').innerText = shapeDB[type].desc;
+
+            let geometry, verticesPos = [];
+            let isSmooth = false; // 是否為曲面
+
+            // 定義幾何與頂點位置
+            switch(type) {
+                case 'cube':
+                    geometry = new THREE.BoxGeometry(2,2,2);
+                    verticesPos = [
+                        [1,1,1], [1,1,-1], [1,-1,1], [1,-1,-1],
+                        [-1,1,1], [-1,1,-1], [-1,-1,1], [-1,-1,-1]
+                    ];
+                    break;
+                case 'cylinder':
+                    geometry = new THREE.CylinderGeometry(1,1,2.5,32);
+                    isSmooth = true;
+                    // 圓柱體一般教學上視為無頂點
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(1.2, 2.5, 32);
+                    geometry.translate(0, -0.2, 0); // 中心修正
+                    isSmooth = true;
+                    verticesPos = [[0, 1.05, 0]]; // 只有頂端一個頂點
+                    break;
+                case 'sq_pyramid':
+                    geometry = new THREE.ConeGeometry(1.5, 2, 4);
+                    geometry.rotateY(Math.PI/4); 
+                    verticesPos = [[0,1,0], [1.06,-1,1.06], [-1.06,-1,1.06], [1.06,-1,-1.06], [-1.06,-1,-1.06]];
+                    break;
+                case 'tri_prism':
+                    geometry = new THREE.CylinderGeometry(1.2, 1.2, 2.5, 3);
+                    verticesPos = [
+                        [0, 1.25, 1.2], [1.04, 1.25, -0.6], [-1.04, 1.25, -0.6],
+                        [0, -1.25, 1.2], [1.04, -1.25, -0.6], [-1.04, -1.25, -0.6]
+                    ];
+                    break;
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(1.3, 32, 32);
+                    isSmooth = true;
+                    break;
+            }
+
+            // A. 面 (Faces)
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0x4f46e5, transparent: true, opacity: 0.8, shininess: 80, side: THREE.DoubleSide 
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.userData = { type: 'face', label: isSmooth ? '曲面 (Curved Face)' : '平面 (Flat Face)' };
+            currentGroup.add(mesh);
+            interactables.push(mesh);
+
+            // B. 邊 (Edges) - 球體不顯示邊
+            if (type !== 'sphere') {
+                const edgesGeo = new THREE.EdgesGeometry(geometry); // 自動計算所有銳角邊
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+                const edges = new THREE.LineSegments(edgesGeo, lineMat);
+                edges.userData = { type: 'edge', label: '邊 (Edge)' };
+                currentGroup.add(edges);
+                interactables.push(edges);
+            }
+
+            // C. 頂點 (Vertices) - 隱形感應球
+            // 使用完全透明的材質 (opacity: 0)，但 raycaster 仍能偵測到
+            const vGeo = new THREE.SphereGeometry(0.2); // 稍微加大感應範圍
+            const vMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0 }); 
+
+            verticesPos.forEach(p => {
+                const vMesh = new THREE.Mesh(vGeo, vMat.clone()); // Clone material 才能個別控制亮起
+                vMesh.position.set(p[0], p[1], p[2]);
+                vMesh.userData = { type: 'vertex', label: '頂點 (Vertex)' };
+                currentGroup.add(vMesh);
+                interactables.push(vMesh);
+            });
+        }
+
+        // === 4. Raycasting 互動 (核心修改) ===
+        let hoveredObj = null;
+
+        function onMouseMove(e) {
+            // 計算滑鼠位置
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            const tooltip = document.getElementById('cursor-tooltip');
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY + 15) + 'px';
+
+            if(document.getElementById('game-layer').style.display === 'flex') {
+                tooltip.style.display = 'none';
+                return;
+            }
+
+            raycaster.setFromCamera(mouse, camera);
+            // 偵測所有 interactables (面、邊、頂點)
+            const intersects = raycaster.intersectObjects(interactables, false);
+
+            if (intersects.length > 0) {
+                // 優先順序邏輯：
+                // 1. 先找頂點 (Vertex) - 因為頂點通常被邊或面蓋住，要優先偵測
+                // 2. 再找邊 (Edge) - 線條很細，優先級高於面
+                // 3. 最後是面 (Face)
+                
+                let hit = intersects.find(obj => obj.object.userData.type === 'vertex');
+                if (!hit) hit = intersects.find(obj => obj.object.userData.type === 'edge');
+                if (!hit) hit = intersects[0]; // 預設抓第一個 (通常是 Face)
+
+                const object = hit.object;
+                const type = object.userData.type;
+
+                document.body.style.cursor = 'pointer';
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = type === 'vertex' ? `● ${object.userData.label}` :
+                                    type === 'edge' ? `➖ ${object.userData.label}` :
+                                    `■ ${object.userData.label}`;
+
+                // 視覺回饋處理
+                if (hoveredObj !== object) {
+                    resetHover(); // 重置上一個
+                    hoveredObj = object;
+
+                    if (type === 'vertex') {
+                        // 頂點：從透明變為黃色，不透明
+                        object.material.opacity = 1;
+                        object.scale.set(1.5, 1.5, 1.5);
+                    } else if (type === 'edge') {
+                        // 邊：變黃色
+                        object.material.color.set(0xf59e0b);
+                    } else if (type === 'face') {
+                        // 面：變稍微亮一點
+                        object.material.opacity = 0.5;
+                    }
+                }
+            } else {
+                resetHover();
+                document.body.style.cursor = 'default';
+                tooltip.style.display = 'none';
+            }
+        }
+
+        function resetHover() {
+            if (hoveredObj) {
+                const type = hoveredObj.userData.type;
+                if (type === 'vertex') {
+                    hoveredObj.material.opacity = 0; // 變回透明
+                    hoveredObj.scale.set(1, 1, 1);
+                } else if (type === 'edge') {
+                    hoveredObj.material.color.set(0xffffff); // 變回白色
+                } else if (type === 'face') {
+                    hoveredObj.material.opacity = 0.8;
+                }
+                hoveredObj = null;
+            }
+        }
+
+        // === 5. 挑戰模式 ===
         let score = 0;
-        let currentQData = null;
+        let currentQ = null;
 
         function setMode(mode) {
             const gameLayer = document.getElementById('game-layer');
             const controlsBar = document.getElementById('controlsBar');
             const infoCard = document.getElementById('infoCard');
-            const navBtns = document.querySelectorAll('.nav-btn');
-
-            navBtns.forEach(b => b.classList.remove('active'));
+            const btns = document.querySelectorAll('.mode-btn');
             
+            btns.forEach(b => b.classList.remove('active'));
+
             if (mode === 'game') {
-                gameLayer.style.display = 'flex'; // Flex to center
-                gameLayer.classList.add('active');
+                btns[1].classList.add('active');
+                gameLayer.style.display = 'flex';
                 controlsBar.style.display = 'none';
                 infoCard.classList.add('hidden');
-                navBtns[1].classList.add('active');
                 nextQuestion();
             } else {
+                btns[0].classList.add('active');
                 gameLayer.style.display = 'none';
-                gameLayer.classList.remove('active');
                 controlsBar.style.display = 'flex';
                 infoCard.classList.remove('hidden');
-                navBtns[0].classList.add('active');
             }
         }
 
         function nextQuestion() {
-            // 隨機選題
-            const idx = Math.floor(Math.random() * quizQuestions.length);
-            currentQData = quizQuestions[idx];
+            const idx = Math.floor(Math.random() * quizDB.length);
+            currentQ = quizDB[idx];
 
-            const qIcon = document.getElementById('qIcon');
-            const qText = document.getElementById('qText');
-            const qSub = document.getElementById('qSub');
+            document.getElementById('qIcon').innerText = currentQ.icon || '❓';
+            document.getElementById('qText').innerText = currentQ.text;
+            document.getElementById('qSub').innerText = currentQ.hint;
+            
+            // 修正：如果是文字題，category 在 cat 欄位；如果是圖片題，category 在 type 欄位
+            currentQ.answerType = currentQ.cat || currentQ.type;
 
-            // 根據題目類型顯示
-            if (currentQData.type === 'text') {
-                qIcon.innerText = '❓'; // 用問號代表文字題
-                qText.innerText = currentQData.text;
-                qSub.innerText = currentQData.sub || '';
-            } else {
-                qIcon.innerText = currentQData.content;
-                qText.innerText = currentQData.text;
-                qSub.innerText = '這是哪一類圖形？';
-            }
-
-            // 重置按鈕
             document.querySelectorAll('.ans-btn').forEach(b => {
-                b.className = 'ans-btn';
+                b.className = 'ans-btn'; // 重置樣式
             });
         }
 
-        function answer(category) {
-            if (!currentQData) return;
-
-            let isCorrect = false;
-            // 簡易分類邏輯
-            if (category === currentQData.category) isCorrect = true;
-            // 修正：Cylinder 歸類為 Prism family (常見小學教學), Cone 歸類為 Pyramid family
-            if (currentQData.category === 'prism' && category === 'prism') isCorrect = true;
-
+        function answer(userAns) {
+            const isCorrect = (userAns === currentQ.answerType);
+            
             if (isCorrect) {
                 score += 10;
-                event.currentTarget.classList.add('correct');
-                setTimeout(nextQuestion, 600);
+                event.target.classList.add('correct');
+                setTimeout(nextQuestion, 800);
             } else {
-                event.currentTarget.classList.add('wrong');
+                event.target.classList.add('wrong');
             }
             document.getElementById('scoreVal').innerText = score;
         }
