@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D 形狀概念模擬器</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5a623;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --card-bg: #fff;
+            --success-color: #2ecc71;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 50px;
+        }
+
+        /* Header & Logo */
+        header {
+            background-color: var(--card-bg);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-placeholder {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            border-radius: 8px;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            overflow: hidden;
+        }
+
+        .logo-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .lang-switch {
+            padding: 8px 12px;
+            border: 1px solid var(--primary-color);
+            background: none;
+            color: var(--primary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            background: var(--card-bg);
+            padding: 10px 10px 0;
+            margin-top: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #777;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Content Sections */
+        .section-content {
+            display: none;
+            padding: 15px;
+        }
+
+        .section-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        /* --- Module 1: Intuitive Understanding (CSS 3D) --- */
+        .scene-container {
+            width: 100%;
+            height: 200px;
+            perspective: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .shape-3d {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            transform-style: preserve-3d;
+            transform: rotateX(var(--rotX, -20deg)) rotateY(var(--rotY, 30deg));
+            transition: transform 0.1s;
+        }
+
+        /* Cube (Prism) */
+        .cube .face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(74, 144, 226, 0.7);
+            border: 2px solid rgba(74, 144, 226, 1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: white;
+        }
+        .cube .front  { transform: translateZ(50px); }
+        .cube .back   { transform: rotateY(180deg) translateZ(50px); }
+        .cube .right  { transform: rotateY(90deg) translateZ(50px); }
+        .cube .left   { transform: rotateY(-90deg) translateZ(50px); }
+        .cube .top    { transform: rotateX(90deg) translateZ(50px); }
+        .cube .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+        /* Pyramid (Cone/Pyramid approximation) */
+        .pyramid {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            transform-style: preserve-3d;
+            /* Center the rotation point */
+            transform-origin: 50% 50% 0px;
+        }
+
+        .pyramid-face {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 100px solid rgba(245, 166, 35, 0.8);
+            /* Tilt the triangles to meet at a point */
+            transform-origin: 50% 100%;
+        }
+
+        .pyramid .base {
+            width: 100px;
+            height: 100px;
+            background: rgba(245, 166, 35, 0.8);
+            border: none;
+            transform: rotateX(90deg) translateZ(-100px);
+            transform-origin: 50% 100%;
+        }
+
+        /* Adjusting angles for a square pyramid */
+        .p-front  { transform: translateZ(50px) rotateX(30deg); }
+        .p-back   { transform: rotateY(180deg) translateZ(50px) rotateX(30deg); }
+        .p-right  { transform: rotateY(90deg) translateZ(50px) rotateX(30deg); }
+        .p-left   { transform: rotateY(-90deg) translateZ(50px) rotateX(30deg); }
+
+
+        /* Sphere (Simulated with CSS Gradient) */
+        .sphere-sim {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff7e5f, #feb47b);
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.2);
+            transform: rotateX(var(--rotX, 0deg)) rotateY(var(--rotY, 0deg));
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .controls label {
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type=range] {
+            width: 100%;
+        }
+
+        /* --- Module 2: Classification (Drag & Drop) --- */
+        .classification-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .draggables-source {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: #e1e4e8;
+            border-radius: 8px;
+            min-height: 80px;
+            justify-content: center;
+        }
+
+        .draggable-item {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: grab;
+            font-size: 24px;
+            touch-action: none; /* Important for mobile drag */
+            position: relative;
+            z-index: 2;
+        }
+
+        .draggable-item.dragging {
+            opacity: 0.5;
+            z-index: 100;
+        }
+
+        /* Simple visual representations for drag items */
+        .d-cube::after { content: '🧊'; } /* Ice cube representing prism */
+        .d-pyramid::after { content: '⛺'; } /* Tent representing pyramid */
+        .d-sphere::after { content: '⚽'; } /* Ball representing sphere */
+        .d-cylinder::after { content: '🛢️'; } /* Oil drum - prism */
+        .d-cone::after { content: '🍦'; } /* Ice cream - cone/pyramid family */
+
+        .drop-zones {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .drop-zone {
+            background: var(--card-bg);
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone h3 {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .drop-zone.drag-over {
+            background: #f0f8ff;
+            border-color: var(--primary-color);
+        }
+        
+        .drop-zone.correct {
+             border-color: var(--success-color);
+             background-color: #e8f8f0;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 360px) {
+            .drop-zones {
+                grid-template-columns: 1fr;
+            }
+            .drop-zone {
+                min-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-placeholder">
+                <img src="logo.png" alt="Logo" onerror="this.style.display='none'; this.parentNode.innerText='Logo'">
+            </div>
+            <h1 data-i18n="app_title">3D 形狀模擬器</h1>
+        </div>
+        <button class="lang-switch" id="langToggle">EN</button>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-target="section-intuitive" data-i18n="tab_intuitive">直觀認識</button>
+        <button class="tab-btn" data-target="section-classify" data-i18n="tab_classify">分類圖形</button>
+    </div>
+
+    <main>
+        <section id="section-intuitive" class="section-content active">
+            
+            <div class="card">
+                <h2 data-i18n="title_prism">柱體 (Prisms)</h2>
+                <p data-i18n="desc_prism" style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">特點：上下兩個底面是全等的, 側面都是平行四邊形 (例如長方形)。</p>
+                <div class="scene-container">
+                    <div class="shape-3d cube" id="cubeShape">
+                        <div class="face front">前</div>
+                        <div class="face back">後</div>
+                        <div class="face right">右</div>
+                        <div class="face left">左</div>
+                        <div class="face top">上</div>
+                        <div class="face bottom">下</div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <label><span data-i18n="rotate_x">旋轉 X:</span> <input type="range" min="-180" max="180" value="-20" class="rot-x" data-target="cubeShape"></label>
+                    <label><span data-i18n="rotate_y">旋轉 Y:</span> <input type="range" min="-180" max="180" value="30" class="rot-y" data-target="cubeShape"></label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 data-i18n="title_pyramid">錐體 (Pyramids/Cones)</h2>
+                <p data-i18n="desc_pyramid" style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">特點：有一個底面, 側面聚焦於一個頂點。</p>
+                <div class="scene-container" style="perspective: 800px;">
+                    <div class="shape-3d pyramid" id="pyramidShape">
+                        <div class="pyramid-face p-front"></div>
+                        <div class="pyramid-face p-back"></div>
+                        <div class="pyramid-face p-right"></div>
+                        <div class="pyramid-face p-left"></div>
+                        <div class="base"></div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <label><span data-i18n="rotate_x">旋轉 X:</span> <input type="range" min="-90" max="90" value="-20" class="rot-x" data-target="pyramidShape"></label>
+                    <label><span data-i18n="rotate_y">旋轉 Y:</span> <input type="range" min="-180" max="180" value="30" class="rot-y" data-target="pyramidShape"></label>
+                </div>
+            </div>
+
+             <div class="card">
+                <h2 data-i18n="title_sphere">球體 (Spheres)</h2>
+                <p data-i18n="desc_sphere" style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">特點：完美對稱, 表面上所有點到中心的距離都相等。</p>
+                <div class="scene-container">
+                    <div class="sphere-sim" id="sphereShape"></div>
+                </div>
+                <div class="controls">
+                    <label><span data-i18n="rotate_x">旋轉 X (光影):</span> <input type="range" min="-180" max="180" value="0" class="rot-x" data-target="sphereShape"></label>
+                    <label><span data-i18n="rotate_y">旋轉 Y (光影):</span> <input type="range" min="-180" max="180" value="0" class="rot-y" data-target="sphereShape"></label>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="section-classify" class="section-content">
+            <div class="card">
+                <h2 data-i18n="classify_instruction">將物品拖放到正確的類別</h2>
+                
+                <div class="classification-container">
+                    <div class="draggables-source" id="dragSource">
+                        <div class="draggable-item d-cube" data-type="prism"></div>
+                        <div class="draggable-item d-pyramid" data-type="pyramid"></div>
+                        <div class="draggable-item d-sphere" data-type="sphere"></div>
+                        <div class="draggable-item d-cylinder" data-type="prism"></div>
+                        <div class="draggable-item d-cone" data-type="pyramid"></div>
+                    </div>
+
+                    <div class="drop-zones">
+                        <div class="drop-zone" data-accept="prism">
+                            <h3 data-i18n="zone_prism">柱體區</h3>
+                        </div>
+                        <div class="drop-zone" data-accept="pyramid">
+                            <h3 data-i18n="zone_pyramid">錐體區</h3>
+                        </div>
+                        <div class="drop-zone" data-accept="sphere">
+                            <h3 data-i18n="zone_sphere">球體區</h3>
+                        </div>
+                    </div>
+                    <button onclick="resetGame()" style="margin-top:10px; padding: 10px; background: var(--secondary-color); color:white; border:none; border-radius: 5px; cursor:pointer;" data-i18n="reset_game">重置遊戲</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        /**
+         * ==============================
+         * Translations (I18n)
+         * ==============================
+         */
+        const translations = {
+            'zh-HK': {
+                app_title: "3D 形狀模擬器",
+                tab_intuitive: "直觀認識",
+                tab_classify: "分類圖形",
+                title_prism: "柱體 (Prisms)",
+                desc_prism: "特點：上下兩個底面是全等的，側面都是平行四邊形 (例如長方形)。",
+                title_pyramid: "錐體 (Pyramids/Cones)",
+                desc_pyramid: "特點：有一個底面，側面聚焦於一個頂點。",
+                title_sphere: "球體 (Spheres)",
+                desc_sphere: "特點：完美對稱，表面上所有點到中心的距離都相等。",
+                rotate_x: "旋轉 X:",
+                rotate_y: "旋轉 Y:",
+                classify_instruction: "將物品拖放到正確的類別",
+                zone_prism: "柱體區",
+                zone_pyramid: "錐體區",
+                zone_sphere: "球體區",
+                reset_game: "重置遊戲"
+            },
+            'en': {
+                app_title: "3D Shape Simulator",
+                tab_intuitive: "Intuitive View",
+                tab_classify: "Classification",
+                title_prism: "Prisms",
+                desc_prism: "Features: Top and bottom bases are congruent. Side faces are parallelograms (e.g., rectangles).",
+                title_pyramid: "Pyramids & Cones",
+                desc_pyramid: "Features: Has one base. Side faces meet at a single point (apex).",
+                title_sphere: "Spheres",
+                desc_sphere: "Features: Perfectly symmetrical. All points on the surface are equidistant from the center.",
+                rotate_x: "Rotate X:",
+                rotate_y: "Rotate Y:",
+                classify_instruction: "Drag items to the correct category",
+                zone_prism: "Prisms Zone",
+                zone_pyramid: "Pyramids Zone",
+                zone_sphere: "Spheres Zone",
+                reset_game: "Reset Game"
+            }
+        };
+
+        let currentLang = 'zh-HK';
+        const langToggleBtn = document.getElementById('langToggle');
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    element.innerText = translations[currentLang][key];
+                }
+            });
+            langToggleBtn.innerText = currentLang === 'zh-HK' ? 'EN' : '中';
+            document.documentElement.lang = currentLang;
+        }
+
+        langToggleBtn.addEventListener('click', () => {
+            currentLang = currentLang === 'zh-HK' ? 'en' : 'zh-HK';
+            updateLanguage();
+        });
+
+        // Initialize language
+        updateLanguage();
+
+
+        /**
+         * ==============================
+         * Tab Navigation Logic
+         * ==============================
+         */
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const sections = document.querySelectorAll('.section-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all btns and sections
+                tabBtns.forEach(b => b.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+
+                // Add active class to clicked btn and target section
+                btn.classList.add('active');
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+
+        /**
+         * ==============================
+         * Module 1: 3D Rotation Logic
+         * ==============================
+         */
+        const rangeInputs = document.querySelectorAll('input[type="range"]');
+
+        rangeInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const targetId = e.target.getAttribute('data-target');
+                const targetElement = document.getElementById(targetId);
+                const isX = e.target.classList.contains('rot-x');
+                const value = e.target.value;
+
+                if (isX) {
+                    targetElement.style.setProperty('--rotX', `${value}deg`);
+                } else {
+                    targetElement.style.setProperty('--rotY', `${value}deg`);
+                }
+            });
+        });
+
+
+        /**
+         * ==============================
+         * Module 2: Touch Drag & Drop Logic
+         * (Implemented manually for better mobile support than native HTML5 DnD)
+         * ==============================
+         */
+        const draggables = document.querySelectorAll('.draggable-item');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        const dragSource = document.getElementById('dragSource');
+
+        let activeDragItem = null;
+        let initialX, initialY;
+        let currentX, currentY;
+        let xOffset = 0, yOffset = 0;
+
+        draggables.forEach(item => {
+            item.addEventListener('touchstart', dragStart, false);
+            item.addEventListener('touchend', dragEnd, false);
+            item.addEventListener('touchmove', drag, false);
+             // Mouse fallback for desktop testing
+            item.addEventListener('mousedown', dragStart, false);
+        });
+
+        document.addEventListener('mouseup', dragEnd, false);
+        document.addEventListener('mousemove', drag, false);
+
+
+        function dragStart(e) {
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+
+            if (e.target.classList.contains('draggable-item')) {
+                activeDragItem = e.target;
+                activeDragItem.classList.add('dragging');
+                // Ensure it's on top
+                activeDragItem.style.zIndex = 1000; 
+            }
+        }
+
+        function drag(e) {
+            if (activeDragItem) {
+                e.preventDefault();
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, activeDragItem);
+                checkDropZones(e);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        function dragEnd(e) {
+            if (!activeDragItem) return;
+
+            initialX = currentX;
+            initialY = currentY;
+
+            let droppedSuccessfully = false;
+            activeDragItem.classList.remove('dragging');
+            activeDragItem.style.zIndex = 2;
+
+            // Find elements below the drop point
+            let clientX, clientY;
+             if (e.type === "touchend" && e.changedTouches.length > 0) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+             // Temporarily hide the dragged item to see what's underneath
+            activeDragItem.style.display = 'none';
+            let elemBelow = document.elementFromPoint(clientX, clientY);
+            activeDragItem.style.display = 'flex';
+
+            let dropZoneBelow = elemBelow ? elemBelow.closest('.drop-zone') : null;
+
+            if (dropZoneBelow) {
+                const itemType = activeDragItem.getAttribute('data-type');
+                const zoneType = dropZoneBelow.getAttribute('data-accept');
+
+                if (itemType === zoneType) {
+                    // Correct drop
+                    dropZoneBelow.appendChild(activeDragItem);
+                    resetTransform(activeDragItem);
+                    dropZoneBelow.classList.add('correct');
+                    setTimeout(() => dropZoneBelow.classList.remove('correct'), 500);
+                    droppedSuccessfully = true;
+                }
+            }
+
+            dropZones.forEach(dz => dz.classList.remove('drag-over'));
+
+            if (!droppedSuccessfully) {
+                // Return to source if dropped outside or incorrectly
+                dragSource.appendChild(activeDragItem);
+                resetTransform(activeDragItem);
+            }
+            
+            activeDragItem = null;
+        }
+
+        function resetTransform(el) {
+            el.style.transform = "none";
+            xOffset = 0;
+            yOffset = 0;
+        }
+
+        // Highlight potential drop zones during drag
+        function checkDropZones(e) {
+            activeDragItem.style.display = 'none';
+            let clientX = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+            let clientY = e.type.includes("touch") ? e.touches[0].clientY : e.clientY;
+            let elemBelow = document.elementFromPoint(clientX, clientY);
+            activeDragItem.style.display = 'flex';
+
+            dropZones.forEach(dz => dz.classList.remove('drag-over'));
+            let dropZoneBelow = elemBelow ? elemBelow.closest('.drop-zone') : null;
+            if (dropZoneBelow) {
+                 dropZoneBelow.classList.add('drag-over');
+            }
+        }
+
+        function resetGame() {
+             draggables.forEach(item => {
+                 dragSource.appendChild(item);
+                 resetTransform(item);
+             });
+        }
+
+    </script>
+</body>
+</html>
