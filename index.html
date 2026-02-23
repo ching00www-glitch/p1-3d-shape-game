@@ -3,33 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>五年級幾何：立體圖形展開實驗室</title>
+    <title>小五數學：展開圖大師 4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f4f8; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
         #canvas-container { 
             width: 100%; height: 450px; 
-            background: radial-gradient(circle, #ffffff 0%, #d1d5db 100%);
+            background: radial-gradient(circle, #ffffff 0%, #cbd5e1 100%);
             border-radius: 2rem; position: relative; overflow: hidden;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
         .tab-btn.active { background-color: #4f46e5; color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
-        input[type=range] { -webkit-appearance: none; width: 100%; height: 10px; background: #e2e8f0; border-radius: 10px; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; cursor: pointer; border: 3px solid white; }
-        .quiz-card { cursor: pointer; transition: all 0.3s; border: 4px solid transparent; }
-        .quiz-card:hover { transform: scale(1.02); }
-        .quiz-card.selected { border-color: #4f46e5; background: #eef2ff; }
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 12px; background: #e2e8f0; border-radius: 10px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; background: #4f46e5; cursor: pointer; border: 4px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .quiz-option-canvas { cursor: pointer; border: 3px solid #e2e8f0; border-radius: 1.5rem; background: white; transition: 0.3s; }
+        .quiz-option-canvas:hover { border-color: #4f46e5; transform: translateY(-5px); }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
+    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
         <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="h-10 w-20 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-lg">LOGO</div>
-                <h1 class="text-xl font-black text-slate-900 tracking-tight">展開圖 <span class="text-indigo-600">MASTER</span></h1>
+                <div class="h-10 w-24 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-md overflow-hidden">
+                    <img src="logo.png" onerror="this.style.display='none'; this.parentNode.innerText='LOGO'" class="max-h-full">
+                </div>
+                <h1 class="text-xl font-black text-slate-900">展開圖 <span class="text-indigo-600">MASTER</span></h1>
             </div>
         </div>
     </nav>
@@ -37,7 +38,7 @@
     <main class="max-w-7xl mx-auto px-4 py-6">
         <div class="flex justify-center mb-8">
             <div class="bg-slate-200 p-1.5 rounded-2xl inline-flex shadow-inner">
-                <button onclick="switchMode('learn')" id="tab-learn" class="tab-btn active px-10 py-3 rounded-xl text-sm font-bold transition-all">自主學習</button>
+                <button onclick="switchMode('learn')" id="tab-learn" class="tab-btn active px-10 py-3 rounded-xl text-sm font-bold transition-all">摺疊學習</button>
                 <button onclick="switchMode('quiz')" id="tab-quiz" class="tab-btn px-10 py-3 rounded-xl text-sm font-bold transition-all">挑戰測驗</button>
             </div>
         </div>
@@ -45,78 +46,62 @@
         <div id="learn-panel" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 space-y-6">
                 <div id="canvas-container">
-                    <div class="absolute bottom-6 right-6 bg-black/10 backdrop-blur px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                        3D Viewport Controls Enabled
+                    <div class="absolute bottom-6 left-6 bg-white/80 backdrop-blur px-4 py-2 rounded-full text-[10px] font-bold uppercase text-slate-600">
+                        拖曳旋轉 3D 視角
                     </div>
                 </div>
                 
-                <div class="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
                     <div class="flex justify-between items-center mb-6">
-                        <span class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">摺疊模擬器</span>
-                        <div class="text-right">
-                            <span class="text-2xl font-black text-indigo-600" id="percent-display">0%</span>
-                        </div>
+                        <span class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">摺疊模擬控制</span>
+                        <span class="text-2xl font-black text-indigo-600" id="percent-display">0%</span>
                     </div>
                     <input type="range" id="fold-slider" min="0" max="100" value="0">
-                    <div class="flex justify-between mt-4 text-xs font-bold text-slate-400">
-                        <span>平面展開圖 (NET)</span>
-                        <span>立體圖形 (SOLID)</span>
+                    <div class="flex justify-between mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <span>Net (平面)</span>
+                        <span>Solid (立體)</span>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-4 space-y-4">
-                <h3 class="font-bold text-slate-500 ml-2 mb-2 uppercase text-xs tracking-widest">選擇立體圖形</h3>
-                <div class="grid grid-cols-1 gap-3">
-                    <button onclick="loadShape('cube')" class="shape-btn group bg-white hover:bg-indigo-600 p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all">
-                        <span class="text-3xl group-hover:scale-110 transition">🧊</span>
-                        <div class="text-left"><p class="font-bold group-hover:text-white">正方體</p><p class="text-xs text-slate-400 group-hover:text-indigo-200">6個正方形面</p></div>
-                    </button>
-                    <button onclick="loadShape('rect')" class="shape-btn group bg-white hover:bg-indigo-600 p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all">
-                        <span class="text-3xl group-hover:scale-110 transition">📦</span>
-                        <div class="text-left"><p class="font-bold group-hover:text-white">長方體</p><p class="text-xs text-slate-400 group-hover:text-indigo-200">3對不同的矩形</p></div>
-                    </button>
-                    <button onclick="loadShape('tri_prism')" class="shape-btn group bg-white hover:bg-indigo-600 p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all">
-                        <span class="text-3xl group-hover:scale-110 transition">🧀</span>
-                        <div class="text-left"><p class="font-bold group-hover:text-white">三角柱</p><p class="text-xs text-slate-400 group-hover:text-indigo-200">2個底面 + 3個側面</p></div>
-                    </button>
-                    <button onclick="loadShape('pyramid')" class="shape-btn group bg-white hover:bg-indigo-600 p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all">
-                        <span class="text-3xl group-hover:scale-110 transition">⛺</span>
-                        <div class="text-left"><p class="font-bold group-hover:text-white">四角錐</p><p class="text-xs text-slate-400 group-hover:text-indigo-200">方底 + 4個三角側面</p></div>
-                    </button>
-                </div>
+                <h3 class="font-bold text-slate-500 ml-2 uppercase text-xs tracking-widest">選擇練習圖形</h3>
+                <div class="grid grid-cols-1 gap-3" id="shape-list">
+                    </div>
             </div>
         </div>
 
         <div id="quiz-panel" class="hidden max-w-4xl mx-auto">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-black mb-2">誰才是正確的展開圖？</h2>
-                <p class="text-slate-500">觀察結構，點選能成功摺疊成圖形的選項</p>
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black mb-3">找出正確的展開圖</h2>
+                <p class="text-slate-500 font-medium">點擊下方可以成功摺疊成「正方體」的圖樣</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="quiz-options-container">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="quiz-container">
                 </div>
-            <div id="quiz-feedback" class="mt-8 p-6 rounded-2xl hidden text-center font-bold text-lg"></div>
+            <div id="quiz-feedback" class="mt-10 p-6 rounded-3xl hidden text-center font-bold text-xl transition-all scale-95"></div>
         </div>
     </main>
 
     <script>
         let scene, camera, renderer, controls;
         let rootPivot = new THREE.Group();
-        let hingeList = []; // 儲存所有的樞紐關節
+        let hingeList = []; 
+        let currentShape = 'cube';
 
+        // 初始化
         function init() {
             const container = document.getElementById('canvas-container');
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-            camera.position.set(6, 6, 8);
+            camera = new THREE.PerspectiveCamera(40, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            camera.position.set(7, 7, 10);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(container.offsetWidth, container.offsetHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-            const light = new THREE.DirectionalLight(0xffffff, 0.5);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const light = new THREE.DirectionalLight(0xffffff, 0.6);
             light.position.set(10, 20, 10);
             scene.add(light);
 
@@ -124,197 +109,157 @@
             controls.enableDamping = true;
             
             scene.add(rootPivot);
+            initShapeButtons();
             loadShape('cube');
             animate();
         }
 
-        // --- 核心：建立樞紐零件 ---
-        function createPanel(w, h, color) {
+        // 建立精確的面與樞紐
+        function createHingePanel(w, h, color) {
             const group = new THREE.Group();
             const geo = new THREE.PlaneGeometry(w, h);
             const mat = new THREE.MeshPhongMaterial({ color: color, side: THREE.DoubleSide, transparent:true, opacity:0.9 });
             const mesh = new THREE.Mesh(geo, mat);
-            
-            // 邊框
-            const edges = new THREE.LineSegments(
-                new THREE.EdgesGeometry(geo),
-                new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 })
-            );
-            mesh.add(edges);
-            
-            // 修正平面的中心點到邊緣，以便旋轉
-            // 預設 PlaneGeometry 中心在 0,0。我們需要將 mesh 位移，使 group 的中心點位於邊緣
+            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 })));
             group.add(mesh);
             return { group, mesh, w, h };
         }
 
         function loadShape(type) {
+            currentShape = type;
             while(rootPivot.children.length > 0) rootPivot.remove(rootPivot.children[0]);
             hingeList = [];
             
+            const S = 2; // 基本尺寸
             const colors = { cube: 0x6366f1, rect: 0x10b981, tri_prism: 0xf59e0b, pyramid: 0xec4899 };
             const c = colors[type];
 
             if(type === 'cube') {
-                const s = 2;
-                // 底面 (核心)
-                const base = createPanel(s, s, c);
-                base.group.rotation.x = -Math.PI/2;
-                rootPivot.add(base.group);
+                const base = createHingePanel(S, S, c); base.group.rotation.x = -Math.PI/2; rootPivot.add(base.group);
+                
+                // 1-4-1 結構：底 -> (前->頂), 後, 左, 右
+                const addHinge = (parent, w, h, dir, mPos, angle) => {
+                    const p = createHingePanel(w, h, c);
+                    p.group.position.set(...dir);
+                    p.mesh.position.set(...mPos);
+                    parent.add(p.group);
+                    hingeList.push({ obj: p.group, axis: (Math.abs(dir[0])>0?'y':'x'), angle: angle });
+                    return p.group;
+                };
 
-                // 定義摺疊鏈接 [父件, 旋轉軸, 位移方向, 旋轉角度]
-                const config = [
-                    { name: 'front', parent: base, axis: 'x', dir: [0, s/2, 0], mPos: [0, s/2, 0], angle: -Math.PI/2 },
-                    { name: 'back', parent: base, axis: 'x', dir: [0, -s/2, 0], mPos: [0, -s/2, 0], angle: Math.PI/2 },
-                    { name: 'left', parent: base, axis: 'y', dir: [-s/2, 0, 0], mPos: [-s/2, 0, 0], angle: -Math.PI/2 },
-                    { name: 'right', parent: base, axis: 'y', dir: [s/2, 0, 0], mPos: [s/2, 0, 0], angle: Math.PI/2 },
-                ];
-
-                config.forEach(conf => {
-                    const p = createPanel(s, s, c);
-                    p.group.position.set(...conf.dir);
-                    p.mesh.position.set(...conf.mPos);
-                    conf.parent.group.add(p.group);
-                    hingeList.push({ obj: p.group, axis: conf.axis, targetAngle: conf.angle });
-                    
-                    // 特殊：頂面連接在前面上面
-                    if(conf.name === 'front') {
-                        const top = createPanel(s, s, c);
-                        top.group.position.set(0, s/2, 0);
-                        top.mesh.position.set(0, s/2, 0);
-                        p.group.add(top.group);
-                        hingeList.push({ obj: top.group, axis: 'x', targetAngle: -Math.PI/2 });
-                    }
-                });
-            } 
+                const f = addHinge(base.group, S, S, [0, S/2, 0], [0, S/2, 0], -Math.PI/2);
+                addHinge(base.group, S, S, [0, -S/2, 0], [0, -S/2, 0], Math.PI/2);
+                addHinge(base.group, S, S, [-S/2, 0, 0], [-S/2, 0, 0], -Math.PI/2);
+                addHinge(base.group, S, S, [S/2, 0, 0], [S/2, 0, 0], Math.PI/2);
+                addHinge(f, S, S, [0, S, 0], [0, S/2, 0], -Math.PI/2); // 頂面
+            }
             else if(type === 'rect') {
-                const w=3, h=2, d=1.5;
-                const base = createPanel(w, d, c);
-                base.group.rotation.x = -Math.PI/2;
-                rootPivot.add(base.group);
-
-                const f = createPanel(w, h, c); f.group.position.set(0, d/2, 0); f.mesh.position.set(0, h/2, 0);
-                base.group.add(f.group); hingeList.push({obj: f.group, axis: 'x', targetAngle: -Math.PI/2});
-
-                const b = createPanel(w, h, c); b.group.position.set(0, -d/2, 0); b.mesh.position.set(0, -h/2, 0);
-                base.group.add(b.group); hingeList.push({obj: b.group, axis: 'x', targetAngle: Math.PI/2});
-
-                const l = createPanel(d, h, c); l.group.position.set(-w/2, 0, 0); l.mesh.position.set(-d/2, 0, 0);
-                l.mesh.rotation.z = Math.PI/2;
-                base.group.add(l.group); hingeList.push({obj: l.group, axis: 'y', targetAngle: -Math.PI/2});
-
-                const r = createPanel(d, h, c); r.group.position.set(w/2, 0, 0); r.mesh.position.set(d/2, 0, 0);
-                r.mesh.rotation.z = Math.PI/2;
-                base.group.add(r.group); hingeList.push({obj: r.group, axis: 'y', targetAngle: Math.PI/2});
-
-                const t = createPanel(w, d, c); t.group.position.set(0, h, 0); t.mesh.position.set(0, d/2, 0);
-                f.group.add(t.group); hingeList.push({obj: t.group, axis: 'x', targetAngle: -Math.PI/2});
+                const W=3, H=2, D=1.5;
+                const base = createHingePanel(W, D, c); base.group.rotation.x = -Math.PI/2; rootPivot.add(base.group);
+                const f = addHingeRect(base.group, W, H, [0, D/2, 0], [0, H/2, 0], -Math.PI/2, 'x', c);
+                addHingeRect(base.group, W, H, [0, -D/2, 0], [0, -H/2, 0], Math.PI/2, 'x', c);
+                addHingeRect(base.group, D, H, [-W/2, 0, 0], [-D/2, 0, 0], -Math.PI/2, 'y', c, true);
+                addHingeRect(base.group, D, H, [W/2, 0, 0], [D/2, 0, 0], Math.PI/2, 'y', c, true);
+                addHingeRect(f, W, D, [0, H, 0], [0, D/2, 0], -Math.PI/2, 'x', c);
             }
             else if(type === 'tri_prism') {
-                const s=2, l=3;
-                const base = createPanel(s, l, c);
-                base.group.rotation.x = -Math.PI/2;
-                rootPivot.add(base.group);
-
-                const sideL = createPanel(s, l, c); sideL.group.position.set(-s/2, 0, 0); sideL.mesh.position.set(-s/2, 0, 0);
-                base.group.add(sideL.group); hingeList.push({obj: sideL.group, axis:'y', targetAngle: -Math.PI/1.5});
-
-                const sideR = createPanel(s, l, c); sideR.group.position.set(s/2, 0, 0); sideR.mesh.position.set(s/2, 0, 0);
-                base.group.add(sideR.group); hingeList.push({obj: sideR.group, axis:'y', targetAngle: Math.PI/1.5});
-
-                // 三角形底面
-                const triGeo = new THREE.CircleGeometry(s/Math.sqrt(3), 3);
-                const triMat = new THREE.MeshPhongMaterial({color:c, side:THREE.DoubleSide});
-                
-                const t1 = new THREE.Group(); 
-                const tm1 = new THREE.Mesh(triGeo, triMat); 
-                tm1.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeo), new THREE.LineBasicMaterial({color:0})));
-                tm1.rotation.z = Math.PI/6; tm1.position.y = (s * Math.sqrt(3)/6);
-                t1.add(tm1); t1.position.set(0, l/2, 0);
-                base.group.add(t1); hingeList.push({obj: t1, axis:'x', targetAngle: -Math.PI/2});
-
-                const t2 = new THREE.Group(); 
-                const tm2 = new THREE.Mesh(triGeo, triMat); 
-                tm2.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeo), new THREE.LineBasicMaterial({color:0})));
-                tm2.rotation.z = -Math.PI/6; tm2.scale.y = -1; tm2.position.y = -(s * Math.sqrt(3)/6);
-                t2.add(tm2); t2.position.set(0, -l/2, 0);
-                base.group.add(t2); hingeList.push({obj: t2, axis:'x', targetAngle: Math.PI/2});
+                const S=2, L=3;
+                const base = createHingePanel(S, L, c); base.group.rotation.x = -Math.PI/2; rootPivot.add(base.group);
+                addHingeRect(base.group, S, L, [-S/2, 0, 0], [-S/2, 0, 0], -Math.PI/1.5, 'y', c);
+                addHingeRect(base.group, S, L, [S/2, 0, 0], [S/2, 0, 0], Math.PI/1.5, 'y', c);
+                // 三角底
+                const tri = (y, ang) => {
+                    const g = new THREE.Group(); g.position.set(0, y, 0); base.group.add(g);
+                    const m = new THREE.Mesh(new THREE.CircleGeometry(S/Math.sqrt(3), 3), new THREE.MeshPhongMaterial({color:c, side:2}));
+                    m.rotation.z = Math.PI/6; m.position.y = (y>0?1:-1)*(S*Math.sqrt(3)/6);
+                    if(y<0) m.scale.y = -1;
+                    g.add(m); hingeList.push({obj:g, axis:'x', angle: ang});
+                };
+                tri(L/2, -Math.PI/2); tri(-L/2, Math.PI/2);
             }
             else if(type === 'pyramid') {
-                const s = 2;
-                const base = createPanel(s, s, c);
-                base.group.rotation.x = -Math.PI/2;
-                rootPivot.add(base.group);
-
-                const triGeo = new THREE.CircleGeometry(s, 3); // 簡化三角形
-                const triMat = new THREE.MeshPhongMaterial({color:c, side:THREE.DoubleSide});
-                
-                const dirs = [[0, s/2, 'x', -1.2], [0, -s/2, 'x', 1.2], [-s/2, 0, 'y', -1.2], [s/2, 0, 'y', 1.2]];
-                dirs.forEach((d, i) => {
-                    const g = new THREE.Group();
-                    const m = new THREE.Mesh(triGeo, triMat);
+                const S = 2.5;
+                const base = createHingePanel(S, S, c); base.group.rotation.x = -Math.PI/2; rootPivot.add(base.group);
+                const triGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-S/2,0,0), new THREE.Vector3(S/2,0,0), new THREE.Vector3(0,S,0)]);
+                const tri = (x, y, rz, rx, ry, axis) => {
+                    const g = new THREE.Group(); g.position.set(x, y, 0); g.rotation.z = rz; base.group.add(g);
+                    const m = new THREE.Mesh(triGeo, new THREE.MeshPhongMaterial({color:c, side:2}));
                     m.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeo), new THREE.LineBasicMaterial({color:0})));
-                    m.rotation.z = Math.PI/6;
-                    // 位移使底部對齊旋轉軸
-                    m.position.y = (s * Math.sqrt(3)/2) / 2;
-                    g.add(m); g.position.set(d[0], d[1], 0);
-                    if(d[2]==='y') g.rotation.z = (d[0]>0)?-Math.PI/2:Math.PI/2;
-                    if(d[1]<0) g.rotation.z = Math.PI;
-                    base.group.add(g);
-                    hingeList.push({obj: g, axis: d[2], targetAngle: d[3]});
-                });
+                    g.add(m); hingeList.push({obj:g, axis:axis, angle: (axis==='x'?rx:ry)});
+                };
+                tri(0, S/2, 0, -1.2, 0, 'x'); tri(0, -S/2, Math.PI, -1.2, 0, 'x');
+                tri(-S/2, 0, Math.PI/2, 0, -1.2, 'y'); tri(S/2, 0, -Math.PI/2, 0, 1.2, 'y');
             }
-
             document.getElementById('fold-slider').value = 0;
-            document.getElementById('percent-display').innerText = "0%";
+            updateFolding(0);
+        }
+
+        function addHingeRect(parent, w, h, dir, mPos, ang, axis, c, rotateZ=false) {
+            const p = createHingePanel(w, h, c);
+            p.group.position.set(...dir); p.mesh.position.set(...mPos);
+            if(rotateZ) p.mesh.rotation.z = Math.PI/2;
+            parent.add(p.group);
+            hingeList.push({ obj: p.group, axis: axis, angle: ang });
+            return p.group;
         }
 
         function updateFolding(val) {
             const p = val / 100;
             hingeList.forEach(h => {
-                if(h.axis === 'x') h.obj.rotation.x = h.targetAngle * p;
-                if(h.axis === 'y') h.obj.rotation.y = h.targetAngle * p;
+                if(h.axis === 'x') h.obj.rotation.x = h.angle * p;
+                else h.obj.rotation.y = h.angle * p;
             });
             document.getElementById('percent-display').innerText = val + "%";
         }
 
         document.getElementById('fold-slider').oninput = (e) => updateFolding(e.target.value);
 
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
+        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+
+        // --- 測驗：即時繪製展開圖 ---
+        function drawNet(canvas, isCorrect) {
+            const ctx = canvas.getContext('2d');
+            const S = 40; // 方格大小
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#4f46e5'; ctx.lineWidth = 3; ctx.setLineDash([]);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            if(isCorrect) {
+                // 正確的 1-4-1 結構
+                [[0,0], [-1,0], [1,0], [2,0], [0,1], [0,-1]].forEach(p => {
+                    ctx.strokeRect(centerX + p[0]*S - S/2, centerY + p[1]*S - S/2, S, S);
+                });
+            } else {
+                // 錯誤結構 (一排 5 個)
+                [[0,0], [-1,0], [1,0], [2,0], [-2,0], [0,1]].forEach(p => {
+                    ctx.strokeRect(centerX + p[0]*S - S/2, centerY + p[1]*S - S/2, S, S);
+                });
+            }
         }
 
-        // --- 挑戰模式 ---
         function switchMode(mode) {
-            document.getElementById('tab-learn').classList.toggle('active', mode==='learn');
-            document.getElementById('tab-quiz').classList.toggle('active', mode==='quiz');
-            document.getElementById('learn-panel').classList.toggle('hidden', mode!=='learn');
-            document.getElementById('quiz-panel').classList.toggle('hidden', mode!=='quiz');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + mode).classList.add('active');
+            document.getElementById('learn-panel').classList.toggle('hidden', mode !== 'learn');
+            document.getElementById('quiz-panel').classList.toggle('hidden', mode !== 'quiz');
             if(mode === 'quiz') startQuiz();
         }
 
         function startQuiz() {
-            const container = document.getElementById('quiz-options-container');
+            const container = document.getElementById('quiz-container');
             container.innerHTML = '';
             document.getElementById('quiz-feedback').classList.add('hidden');
 
-            // 隨機選一個圖形作為題目
-            const target = 'cube'; // 以正方體為例，最常考
-            
-            // 產生兩個選項：一個正確，一個錯誤
-            const options = [
-                { id: 'correct', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Net_of_a_cube.svg/1200px-Net_of_a_cube.svg.png', isCorrect: true },
-                { id: 'wrong', img: 'https://i.stack.imgur.com/K3pS0.png', isCorrect: false } // 錯誤的圖樣
-            ].sort(() => Math.random() - 0.5);
-
-            options.forEach(opt => {
-                const card = document.createElement('div');
-                card.className = "quiz-card bg-white p-6 rounded-[2rem] shadow-lg flex flex-col items-center";
-                card.innerHTML = `<img src="${opt.img}" class="h-48 object-contain mb-4"><p class="font-bold text-slate-400 uppercase tracking-widest text-xs">圖樣選擇</p>`;
-                card.onclick = () => checkAns(opt.isCorrect);
-                container.appendChild(card);
+            const options = [true, false].sort(() => Math.random() - 0.5);
+            options.forEach(isCorrect => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 300; canvas.height = 250;
+                canvas.className = "quiz-option-canvas w-full";
+                canvas.onclick = () => checkAns(isCorrect);
+                container.appendChild(canvas);
+                drawNet(canvas, isCorrect);
             });
         }
 
@@ -322,12 +267,34 @@
             const fb = document.getElementById('quiz-feedback');
             fb.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
             if(isCorrect) {
-                fb.innerText = "✅ 太厲害了！這是正確的展開圖！";
-                fb.classList.add('bg-green-100', 'text-green-700');
+                fb.innerText = "✅ 太棒了！這是正確的「1-4-1」正方體展開圖！";
+                fb.classList.add('bg-green-100', 'text-green-700', 'scale-100');
+                setTimeout(startQuiz, 2500);
             } else {
-                fb.innerText = "❌ 哎呀，這個圖樣摺不起來喔。再觀察一下！";
-                fb.classList.add('bg-red-100', 'text-red-700');
+                fb.innerText = "❌ 哎呀，這個圖樣摺不起來（面會重疊喔）。";
+                fb.classList.add('bg-red-100', 'text-red-700', 'scale-100');
             }
+        }
+
+        function initShapeButtons() {
+            const data = [
+                { id: 'cube', n: '正方體', i: '🧊' },
+                { id: 'rect', n: '長方體', i: '📦' },
+                { id: 'tri_prism', n: '三角柱', i: '🧀' },
+                { id: 'pyramid', n: '四角錐', i: '⛺' }
+            ];
+            const container = document.getElementById('shape-list');
+            data.forEach(d => {
+                const btn = document.createElement('button');
+                btn.className = "group bg-white hover:bg-indigo-600 p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all";
+                btn.onclick = () => {
+                    loadShape(d.id);
+                    document.querySelectorAll('#shape-list button').forEach(b => b.classList.remove('ring-4', 'ring-indigo-300'));
+                    btn.classList.add('ring-4', 'ring-indigo-300');
+                };
+                btn.innerHTML = `<span class="text-3xl">${d.i}</span><div class="text-left"><p class="font-black group-hover:text-white">${d.n}</p></div>`;
+                container.appendChild(btn);
+            });
         }
 
         window.onload = init;
