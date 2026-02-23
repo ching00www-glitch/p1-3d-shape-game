@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D 形狀小奇兵 3.1</title>
+    <title>3D 形狀小奇兵 3.2 Professional</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
@@ -29,36 +29,36 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
 
         header { 
-            pointer-events: auto; margin: 10px; padding: 10px 15px;
+            pointer-events: auto; margin: 10px; padding: 12px 20px;
             background: var(--card); border-radius: 50px; border: 3px solid var(--primary);
             display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .logo-box { width: 100px; height: 40px; background: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        /* Logo 增大一倍 */
+        .logo-box { width: 200px; height: 80px; background: #f0f0f0; border-radius: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .logo-box img { width: 100%; height: 100%; object-fit: contain; }
         
         .top-controls { display: flex; gap: 8px; }
-        .lang-btn { background: #555; color: white; border: none; padding: 6px 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-        .mode-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .lang-btn { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .mode-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 15px; font-weight: bold; cursor: pointer; }
 
         .info-card { 
-            pointer-events: auto; position: absolute; top: 85px; right: 15px; width: 220px;
+            pointer-events: auto; position: absolute; top: 110px; right: 15px; width: 240px;
             background: var(--card); padding: 15px; border-radius: 20px; border: 3px solid var(--secondary);
             box-shadow: 0 6px 15px rgba(107, 102, 255, 0.2);
         }
 
         .controls-bar { pointer-events: auto; display: flex; gap: 10px; overflow-x: auto; padding: 15px; background: white; border-top: 3px solid var(--primary); }
-        .shape-btn { background: #fff; border: 2px solid var(--primary); padding: 10px 18px; border-radius: 25px; font-weight: bold; color: var(--primary); white-space: nowrap; cursor: pointer; }
+        .shape-btn { background: #fff; border: 2px solid var(--primary); padding: 10px 20px; border-radius: 25px; font-weight: bold; color: var(--primary); white-space: nowrap; cursor: pointer; }
         .shape-btn.active { background: var(--primary); color: white; }
 
+        /* 遊戲層 */
         #game-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
-        .quiz-box { background: white; width: 85%; max-width: 400px; border-radius: 30px; padding: 25px; text-align: center; border: 5px solid var(--secondary); }
-        .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .ans-btn { background: #f0f0ff; border: 2px solid var(--secondary); padding: 15px 5px; border-radius: 15px; font-weight: bold; cursor: pointer; }
-        .ans-btn.correct { background: var(--success); color: white; }
-        .ans-btn.wrong { background: var(--error); color: white; }
-        .skip-btn { margin-top: 15px; background: none; border: 1px solid #aaa; color: #777; padding: 5px 20px; border-radius: 10px; cursor: pointer; }
-
-        #cursor-tooltip { position: fixed; background: white; border: 2px solid var(--primary); padding: 4px 10px; border-radius: 10px; font-weight: bold; z-index: 1000; pointer-events: none; display: none; }
+        .quiz-box { background: white; width: 85%; max-width: 450px; border-radius: 30px; padding: 30px; text-align: center; border: 5px solid var(--secondary); }
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .ans-btn { background: #f0f0ff; border: 2px solid var(--secondary); padding: 18px 5px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        
+        #cursor-tooltip { position: fixed; background: white; border: 2px solid var(--primary); padding: 5px 12px; border-radius: 10px; font-weight: bold; z-index: 1000; pointer-events: none; display: none; }
     </style>
 </head>
 <body>
@@ -68,7 +68,9 @@
 
     <div id="ui-layer">
         <header>
-            <div class="logo-box"><img src="logo.png" alt="LOGO" id="appLogo" onerror="this.style.display='none'; this.parentNode.innerText='LOGO';"></div>
+            <div class="logo-box">
+                <img src="logo.png" alt="LOGO" id="appLogo" onerror="this.style.display='none'; this.parentNode.innerText='Your Logo Here';">
+            </div>
             <div class="top-controls">
                 <button class="lang-btn" onclick="toggleLang()">EN/中</button>
                 <button class="mode-btn" onclick="startChallenge()">➔ <span id="modeText">挑戰模式</span></button>
@@ -77,7 +79,7 @@
 
         <div class="info-card" id="infoCard">
             <h2 id="infoTitle" style="margin:0; color:var(--secondary);">正方體</h2>
-            <p id="infoDesc" style="margin:5px 0; font-size:0.9rem; color:#666;">載入中...</p>
+            <p id="infoDesc" style="margin:8px 0; font-size:1rem; color:#444;">載入中...</p>
         </div>
 
         <div class="controls-bar" id="controlsBar">
@@ -92,22 +94,22 @@
 
     <div id="game-layer">
         <div class="quiz-box" id="quiz-screen">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span id="quiz-progress" style="font-weight:bold; color:var(--secondary);">題目: 1 / 6</span>
-                <button onclick="exitGame()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">❌</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <span id="quiz-progress" style="font-weight:bold; color:var(--secondary); font-size:1.2rem;">題目: 1 / 6</span>
+                <button onclick="exitGame()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">❌</button>
             </div>
-            <div id="qIcon" style="font-size:4rem; margin-bottom:10px;">📦</div>
-            <h3 id="qText">這是什麼？</h3>
+            <div id="qIcon" style="font-size:5rem; margin-bottom:15px;">📦</div>
+            <h3 id="qText" style="font-size:1.4rem;">這是什麼？</h3>
             <div id="gameArea"></div>
-            <div id="feedback" style="margin-top:10px; font-weight:bold; height:20px;"></div>
-            <button class="skip-btn" onclick="skipQuestion()" id="btnSkip">略過 Skip</button>
+            <div id="feedback" style="margin-top:15px; font-weight:bold; height:24px; font-size:1.2rem;"></div>
+            <button onclick="skipQuestion()" style="margin-top:20px; background:none; border:1px solid #ccc; color:#888; padding:8px 20px; border-radius:10px; cursor:pointer;">略過 Skip</button>
         </div>
 
         <div class="quiz-box" id="result-screen" style="display:none;">
-            <h2 id="resTitle" style="color:var(--primary);">完成挑戰！</h2>
-            <div id="resScore" style="font-size:3rem; font-weight:bold; color:var(--secondary); margin:20px 0;">60分</div>
-            <p id="resFeedback">太棒了！</p>
-            <button class="ans-btn" style="width:100%; background:var(--primary); color:white;" onclick="exitGame()">返回觀察</button>
+            <h2 style="color:var(--primary); font-size:2rem;">完成挑戰！</h2>
+            <div id="resScore" style="font-size:4rem; font-weight:bold; color:var(--secondary); margin:20px 0;">60分</div>
+            <p id="resFeedback" style="font-size:1.2rem;">你表現得太棒了！</p>
+            <button class="ans-btn" style="width:100%; background:var(--primary); color:white; margin-top:20px;" onclick="exitGame()">返回觀察模式</button>
         </div>
     </div>
 
@@ -116,19 +118,19 @@
             zh: {
                 face: "面 (Face)", edge: "邊 (Edge)", vertex: "頂點 (Vertex)",
                 prism: "柱體", pyramid: "錐體", sphere: "球體",
-                correct: "答對了！🌟", wrong: "不對喔！", finish: "完成挑戰！",
+                correct: "太棒了！🌟", wrong: "不對喔！再試一次", finish: "完成挑戰！",
                 shapes: {
-                    cube: ["正方體", "有 6 個正方形的面。"],
-                    cylinder: ["圓柱體", "像汽水罐，有 2 個底面。"],
-                    cone: ["圓錐體", "像派對帽，有 1 個尖頂。"],
-                    sq_pyramid: ["四角錐", "底面是方形，側面是三角形。"],
-                    tri_prism: ["三角柱", "底面是三角形，側面是長方形。"],
-                    sphere: ["球體", "圓溜溜，沒有頂點和邊。"]
+                    cube: ["正方體", "由 6 個正方形組成，有 8 個頂點。"],
+                    cylinder: ["圓柱體", "像汽水罐，上下底面是圓形。"],
+                    cone: ["圓錐體", "像派對帽，只有 1 個尖頂。"],
+                    sq_pyramid: ["四角錐", "底面是方形，側面是 4 個三角形。"],
+                    tri_prism: ["三角柱", "底面是三角形，側面是 3 個長方形。"],
+                    sphere: ["球體", "圓溜溜的，沒有頂點也沒有邊。"]
                 },
                 quizzes: [
-                    { t: 'c', i: '📦', q: '快遞盒是什麼體？', a: 'prism' },
-                    { t: 'c', i: '⚽', q: '足球是什麼體？', a: 'sphere' },
-                    { t: 'c', i: '⛺', q: '金字塔帳篷是什麼體？', a: 'pyramid' },
+                    { t: 'c', i: '📦', q: '快遞紙箱屬於哪一類？', a: 'prism' },
+                    { t: 'c', i: '⚽', q: '足球屬於哪一類？', a: 'sphere' },
+                    { t: 'c', i: '⛺', q: '這帳篷屬於哪一類？', a: 'prism' }, // 屋型帳篷是三角柱
                     { t: 'i', i: '❓', q: '正方體有幾個頂點？', a: ['8'] },
                     { t: 'i', i: '🍦', q: '圓錐體有幾個頂點？', a: ['1'] },
                     { t: 'i', i: '⚽', q: '球體有幾個平面？', a: ['0'] }
@@ -137,22 +139,22 @@
             en: {
                 face: "Face", edge: "Edge", vertex: "Vertex",
                 prism: "Prism", pyramid: "Pyramid", sphere: "Sphere",
-                correct: "Correct! 🌟", wrong: "Try again!", finish: "Great Job!",
+                correct: "Amazing! 🌟", wrong: "Not quite!", finish: "Challenge Done!",
                 shapes: {
-                    cube: ["Cube", "6 square faces."],
-                    cylinder: ["Cylinder", "Circular bases."],
-                    cone: ["Cone", "Has 1 vertex."],
-                    sq_pyramid: ["Sq. Pyramid", "Square base."],
-                    tri_prism: ["Tri. Prism", "Triangular base."],
-                    sphere: ["Sphere", "Perfectly round."]
+                    cube: ["Cube", "6 square faces and 8 vertices."],
+                    cylinder: ["Cylinder", "Like a can with circular bases."],
+                    cone: ["Cone", "Has 1 vertex like a hat."],
+                    sq_pyramid: ["Sq. Pyramid", "Square base and 4 triangles."],
+                    tri_prism: ["Tri. Prism", "Triangular bases, 3 rectangles."],
+                    sphere: ["Sphere", "Round, no vertices or edges."]
                 },
                 quizzes: [
                     { t: 'c', i: '📦', q: 'What is a box?', a: 'prism' },
                     { t: 'c', i: '⚽', q: 'What is a ball?', a: 'sphere' },
-                    { t: 'c', i: '⛺', q: 'What is a tent?', a: 'pyramid' },
+                    { t: 'c', i: '⛺', q: 'What is this tent?', a: 'prism' },
                     { t: 'i', i: '❓', q: 'How many vertices on a cube?', a: ['8'] },
                     { t: 'i', i: '🍦', q: 'How many vertices on a cone?', a: ['1'] },
-                    { t: 'i', i: '⚽', q: 'Flat faces on a sphere?', a: ['0'] }
+                    { t: 'i', i: '⚽', q: 'How many flat faces on a sphere?', a: ['0'] }
                 ]
             }
         };
@@ -167,20 +169,16 @@
             camera.position.set(0, 2, 5);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setPixelRatio(window.devicePixelRatio);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
             raycaster = new THREE.Raycaster();
-            raycaster.params.Line.threshold = 0.2; // 讓邊更容易被偵測
+            raycaster.params.Line.threshold = 0.25; 
             mouse = new THREE.Vector2();
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             scene.add(currentGroup);
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-            // 監聽 mousemove 和 touchmove
+            window.addEventListener('resize', onResize);
             window.addEventListener('pointermove', onPointerMove);
             loadShape('cube');
             animate();
@@ -188,9 +186,15 @@
 
         function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
 
+        function onResize() {
+            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
         function loadShape(type) {
             while(currentGroup.children.length > 0) currentGroup.remove(currentGroup.children[0]);
             interactables = [];
+            
             const info = i18n[lang].shapes[type];
             document.getElementById('infoTitle').innerText = info[0];
             document.getElementById('infoDesc').innerText = info[1];
@@ -199,28 +203,30 @@
             if(type==='cube') { geo = new THREE.BoxGeometry(1.8,1.8,1.8); vPos=[[0.9,0.9,0.9],[0.9,0.9,-0.9],[0.9,-0.9,0.9],[0.9,-0.9,-0.9],[-0.9,0.9,0.9],[-0.9,0.9,-0.9],[-0.9,-0.9,0.9],[-0.9,-0.9,-0.9]]; }
             else if(type==='cylinder') geo = new THREE.CylinderGeometry(1,1,2.5,32);
             else if(type==='cone') { geo = new THREE.ConeGeometry(1.2,2.5,32); vPos=[[0,1.25,0]]; }
-            else if(type==='sq_pyramid') { geo = new THREE.ConeGeometry(1.5,2.5,4); geo.rotateY(Math.PI/4); vPos=[[0,1.25,0],[1,-1.25,1],[-1,-1.25,1],[1,-1.25,-1],[-1,-1.25,-1]]; }
-            else if(type==='tri_prism') { geo = new THREE.CylinderGeometry(1.2,1.2,2.5,3); vPos=[[0,1.25,1.2],[1,1.25,-0.6],[-1,1.25,-0.6],[0,-1.25,1.2],[1,-1.25,-0.6],[-1,-1.25,-0.6]]; }
+            else if(type==='sq_pyramid') { geo = new THREE.ConeGeometry(1.5,2.5,4); geo.rotateY(Math.PI/4); vPos=[[0,1.25,0],[1.06,-1.25,1.06],[-1.06,-1.25,1.06],[1.06,-1.25,-1.06],[-1.06,-1.25,-1.06]]; }
+            else if(type==='tri_prism') { geo = new THREE.CylinderGeometry(1.2,1.2,2.5,3); vPos=[[0,1.25,1.2],[1.04,1.25,-0.6],[-1.04,1.25,-0.6],[0,-1.25,1.2],[1.04,-1.25,-0.6],[-1.04,-1.25,-0.6]]; }
             else if(type==='sphere') geo = new THREE.SphereGeometry(1.3,32,32);
 
-            const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x6B66FF, transparent:true, opacity:0.8}));
+            const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x6B66FF, transparent:true, opacity:0.85}));
             mesh.userData = { type: 'face', label: i18n[lang].face };
             currentGroup.add(mesh);
             interactables.push(mesh);
 
             if(type!=='sphere') {
-                const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xffffff}));
+                const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xffffff, linewidth: 2}));
                 lines.userData = { type: 'edge', label: i18n[lang].edge };
                 currentGroup.add(lines);
                 interactables.push(lines);
             }
 
-            const vGeo = new THREE.SphereGeometry(0.25); // 加大感應區
+            // 頂點感應球：直接作為 Mesh 的子物件，解決旋轉缺失問題
+            const vGeo = new THREE.SphereGeometry(0.25);
             vPos.forEach(p => {
-                const v = new THREE.Mesh(vGeo, new THREE.MeshBasicMaterial({transparent:true, opacity:0}));
+                const v = new THREE.Mesh(vGeo, new THREE.MeshBasicMaterial({color: 0xFF7E5F, transparent:true, opacity:0}));
                 v.position.set(p[0], p[1], p[2]);
                 v.userData = { type: 'vertex', label: i18n[lang].vertex };
-                currentGroup.add(v);
+                v.renderOrder = 999; // 確保在最上層渲染
+                mesh.add(v); // 重要：掛載到 mesh 下
                 interactables.push(v);
             });
         }
@@ -230,12 +236,14 @@
             mouse.x = (e.clientX/window.innerWidth)*2-1;
             mouse.y = -(e.clientY/window.innerHeight)*2+1;
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(interactables, false);
+            const intersects = raycaster.intersectObjects(interactables, true);
             const tip = document.getElementById('cursor-tooltip');
+            
             if(intersects.length > 0) {
-                // 優先級: 頂點 > 邊 > 面
                 const hit = intersects.find(o=>o.object.userData.type==='vertex') || intersects.find(o=>o.object.userData.type==='edge') || intersects[0];
-                tip.style.display = 'block'; tip.style.left = e.clientX+10+'px'; tip.style.top = e.clientY+10+'px';
+                tip.style.display = 'block'; 
+                tip.style.left = e.clientX+12+'px'; 
+                tip.style.top = e.clientY+12+'px';
                 tip.innerText = hit.object.userData.label;
             } else tip.style.display = 'none';
         }
@@ -263,14 +271,16 @@
                     <button class="ans-btn" onclick="check('sphere',this)">${i18n[lang].sphere}</button>
                 </div>`;
             } else {
-                area.innerHTML = `<div class="input-area"><input type="text" id="ansIn" class="game-input" placeholder="...">
-                    <button class="ans-btn" style="background:var(--secondary);color:white;" onclick="checkIn()">OK</button></div>`;
+                area.innerHTML = `<div class="input-area" style="display:flex; gap:10px; margin-top:20px;">
+                    <input type="text" id="ansIn" style="flex:1; padding:15px; border-radius:15px; border:2px solid #ddd; font-size:1.2rem; text-align:center;" placeholder="...">
+                    <button class="ans-btn" style="background:var(--secondary);color:white; padding:0 25px;" onclick="checkIn()">OK</button></div>`;
             }
         }
 
         function check(a, btn) {
             const ok = a === currentQuiz.a; if(ok) score+=10;
             btn.style.background = ok ? 'var(--success)' : 'var(--error)';
+            btn.style.color = 'white';
             showFb(ok);
         }
 
@@ -293,6 +303,7 @@
             document.getElementById('quiz-screen').style.display='none';
             document.getElementById('result-screen').style.display='block';
             document.getElementById('resScore').innerText = score + "分";
+            document.getElementById('resFeedback').innerText = score >= 40 ? (lang==='zh'?"你表現得太棒了！":"Amazing Job!") : (lang==='zh'?"繼續努力！":"Keep it up!");
         }
 
         function exitGame() { document.getElementById('game-layer').style.display='none'; }
