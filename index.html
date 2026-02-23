@@ -1,331 +1,473 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>立體幾何 MASTER 9.0</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <title>3D 立體圖形探索實驗室</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f4f7fb; overflow: hidden; touch-action: none; }
-        #canvas-container { 
-            width: 100%; height: 480px; 
-            background: radial-gradient(circle, #ffffff 0%, #e8ecf3 100%);
-            border-radius: 3rem; position: relative; overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
         }
-        .btn-active { background-color: #4f46e5 !important; color: white !important; transform: scale(1.05); }
-        input[type=range] { -webkit-appearance: none; width: 100%; height: 14px; background: #d1d5db; border-radius: 10px; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 34px; width: 34px; border-radius: 50%; background: #4f46e5; cursor: pointer; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .quiz-card { cursor: pointer; border: 4px solid #eef2f8; border-radius: 2.5rem; transition: 0.3s; background: white; padding: 25px; text-align: center; }
-        .quiz-card:hover { border-color: #4f46e5; transform: translateY(-8px); }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Header */
+        header { background: var(--surface); padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 50; }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
+        .logo { width: 32px; height: 32px; background: #ddd; border-radius: 6px; object-fit: cover; }
+        .btn-sm { padding: 4px 12px; border: 1px solid var(--primary); color: var(--primary); border-radius: 20px; background: transparent; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-sm:active { background: var(--primary); color: white; }
+
+        /* Navigation */
+        .nav-tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .nav-item { flex: 1; text-align: center; padding: 12px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Main Layout */
+        main { flex: 1; position: relative; overflow: hidden; }
+        .view-section { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; overflow-y: auto; }
+        .view-section.active { display: flex; flex-direction: column; }
+
+        /* --- EXPLORE VIEW (3D) --- */
+        .explore-layout { display: flex; flex-direction: column; height: 100%; }
+        
+        /* Shape Selector Bar */
+        .shape-selector { padding: 10px; background: var(--surface); white-space: nowrap; overflow-x: auto; border-bottom: 1px solid var(--border); display: flex; gap: 8px; }
+        .shape-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text-light); font-size: 0.9rem; cursor: pointer; flex-shrink: 0; }
+        .shape-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* 3D Stage */
+        .stage-container { flex: 1; background: radial-gradient(circle at center, #f1f5f9 0%, #cbd5e1 100%); display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; cursor: grab; }
+        .stage-container:active { cursor: grabbing; }
+        
+        .instruction-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.8); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; color: var(--text-light); pointer-events: none; backdrop-filter: blur(4px); }
+
+        /* CSS 3D Engine */
+        .scene { width: 200px; height: 200px; perspective: 1000px; }
+        .object-3d { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transform: rotateX(-20deg) rotateY(30deg); transition: transform 0.1s linear; }
+        
+        /* Generic Face Styles */
+        .face { position: absolute; opacity: 0.8; border: 1px solid rgba(255,255,255,0.5); display: flex; justify-content: center; align-items: center; backface-visibility: visible; }
+        .prism-face { background: rgba(37, 99, 235, 0.4); border-color: rgba(37, 99, 235, 1); }
+        .pyramid-face { background: rgba(245, 158, 11, 0.4); border-color: rgba(245, 158, 11, 1); }
+        
+        /* 1. Cube */
+        .cube .face { width: 100px; height: 100px; left: 50px; top: 50px; }
+        .cube .f-front { transform: translateZ(50px); }
+        .cube .f-back { transform: rotateY(180deg) translateZ(50px); }
+        .cube .f-right { transform: rotateY(90deg) translateZ(50px); }
+        .cube .f-left { transform: rotateY(-90deg) translateZ(50px); }
+        .cube .f-top { transform: rotateX(90deg) translateZ(50px); }
+        .cube .f-bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+        /* 2. Triangular Prism */
+        .tri-prism .face-side { width: 100px; height: 150px; left: 50px; top: 25px; position: absolute; background: rgba(37, 99, 235, 0.4); border: 1px solid var(--primary); }
+        .tri-prism .face-tri { width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 86.6px solid rgba(37, 99, 235, 0.4); left: 50px; position: absolute; }
+        
+        .tri-prism .s1 { transform: translateZ(28.8px); }
+        .tri-prism .s2 { transform: rotateY(120deg) translateZ(28.8px); }
+        .tri-prism .s3 { transform: rotateY(240deg) translateZ(28.8px); }
+        .tri-prism .t-top { transform: rotateX(90deg) translateZ(75px); }
+        .tri-prism .t-bottom { transform: rotateX(-90deg) translateZ(75px); }
+
+        /* 3. Cylinder (Approximated by 12 sides) */
+        .cylinder .side { position: absolute; width: 26px; height: 150px; left: 87px; top: 25px; background: rgba(37, 99, 235, 0.4); border: 1px solid rgba(37,99,235,0.3); }
+        .cylinder .lid { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: rgba(37, 99, 235, 0.4); left: 50px; border: 1px solid var(--primary); }
+        .cylinder .lid-top { transform: rotateX(90deg) translateZ(75px); }
+        .cylinder .lid-bottom { transform: rotateX(-90deg) translateZ(75px); }
+
+        /* 4. Square Pyramid */
+        .sq-pyramid .base { width: 100px; height: 100px; background: rgba(245, 158, 11, 0.6); left: 50px; top: 50px; transform: rotateX(90deg) translateZ(50px); position: absolute; border: 1px solid var(--accent); }
+        .sq-pyramid .tri { width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid rgba(245, 158, 11, 0.4); position: absolute; left: 50px; top: 0; transform-origin: 50% 100%; }
+        .sq-pyramid .t1 { transform: translateZ(50px) rotateX(30deg); }
+        .sq-pyramid .t2 { transform: rotateY(90deg) translateZ(50px) rotateX(30deg); }
+        .sq-pyramid .t3 { transform: rotateY(180deg) translateZ(50px) rotateX(30deg); }
+        .sq-pyramid .t4 { transform: rotateY(-90deg) translateZ(50px) rotateX(30deg); }
+
+        /* 5. Cone */
+        .cone .cone-base { width: 100px; height: 100px; border-radius: 50%; background: rgba(245, 158, 11, 0.6); left: 50px; top: 50px; transform: rotateX(90deg) translateZ(50px); position: absolute; border: 1px solid var(--accent); }
+        .cone .cone-side { width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 100px solid rgba(245, 158, 11, 0.4); position: absolute; left: 80px; top: 0; transform-origin: 50% 100%; }
+
+        /* 6. Sphere (Wireframe) */
+        .sphere-container { position: relative; width: 140px; height: 140px; left: 30px; top: 30px; transform-style: preserve-3d; animation: spin 10s linear infinite; }
+        .ring { position: absolute; width: 100%; height: 100%; border: 2px solid rgba(239, 68, 68, 0.6); border-radius: 50%; }
+        .ring:nth-child(1) { transform: rotateY(0deg); }
+        .ring:nth-child(2) { transform: rotateY(60deg); }
+        .ring:nth-child(3) { transform: rotateY(120deg); }
+        .ring:nth-child(4) { transform: rotateX(90deg); border-color: rgba(239, 68, 68, 0.8); border-width: 3px; } /* Equator */
+
+        /* Info Panel */
+        .info-panel { padding: 20px; background: var(--surface); border-top: 1px solid var(--border); min-height: 150px; }
+        .info-title { font-size: 1.2rem; margin-bottom: 5px; color: var(--text-main); }
+        .info-desc { font-size: 0.95rem; color: var(--text-light); line-height: 1.5; }
+        .info-badges { display: flex; gap: 10px; margin-top: 10px; }
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .badge-prism { background: #dbeafe; color: #1e40af; }
+        .badge-pyramid { background: #fef3c7; color: #92400e; }
+        .badge-sphere { background: #fee2e2; color: #991b1b; }
+
+
+        /* --- GAME VIEW --- */
+        .game-layout { padding: 20px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .stats-bar { display: flex; justify-content: space-between; margin-bottom: 20px; background: var(--surface); padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .score-box { font-weight: bold; color: var(--primary); }
+        
+        .question-area { background: var(--surface); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .q-item { font-size: 4rem; margin: 20px 0; display: block; }
+        .q-text { font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main); }
+        
+        .drop-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .drop-target { background: white; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 15px 5px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; }
+        .drop-target:active, .drop-target.hover { border-color: var(--primary); background: #eff6ff; }
+        .drop-target h4 { font-size: 0.9rem; margin-top: 5px; pointer-events: none; }
+        .drop-icon { font-size: 1.5rem; pointer-events: none; }
+
+        .feedback-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 80%; max-width: 300px; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        
     </style>
 </head>
-<body class="text-slate-800">
+<body>
 
-    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 px-10 h-20 flex justify-between items-center">
-        <div class="flex items-center gap-5">
-            <div class="h-14 w-44 bg-slate-50 rounded-2xl flex items-center justify-center border-2 border-dashed border-indigo-200 overflow-hidden shadow-inner">
-                <img src="logo.png" id="mainLogo" onerror="this.style.display='none'; this.parentNode.innerText='Husky Master'" class="max-h-full">
-            </div>
-            <h1 class="text-2xl font-black tracking-tighter text-indigo-900">立體幾何 <span class="text-indigo-600">MASTER 9.0</span></h1>
+    <header>
+        <div class="brand">
+            <img src="logo.png" class="logo" alt="Logo" onerror="this.style.display='none'">
+            <span data-i18n="app_title">3D 形狀實驗室</span>
         </div>
-        <button onclick="toggleLang()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700">EN / 中文</button>
+        <button class="btn-sm" id="langBtn">EN / 中文</button>
+    </header>
+
+    <nav class="nav-tabs">
+        <div class="nav-item active" onclick="switchTab('explore')" data-i18n="tab_explore">探索模式</div>
+        <div class="nav-item" onclick="switchTab('game')" data-i18n="tab_game">挑戰分類</div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
-        <div class="flex justify-center mb-10">
-            <div class="bg-slate-200 p-1.5 rounded-[2rem] inline-flex shadow-inner">
-                <button onclick="switchMode('learn')" id="tab-learn" class="tab-btn btn-active px-14 py-3.5 rounded-[1.5rem] text-sm font-black transition-all">動態學習</button>
-                <button onclick="switchMode('quiz')" id="tab-quiz" class="tab-btn px-14 py-3.5 rounded-[1.5rem] text-sm font-black transition-all">挑戰測驗</button>
-            </div>
-        </div>
-
-        <div id="learn-panel" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div class="lg:col-span-8">
-                <div id="canvas-container">
-                    <div class="absolute top-6 left-6 bg-white/90 backdrop-blur px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase text-indigo-600 border border-indigo-100 shadow-sm">
-                        High-Precision Net Engine 9.0
-                    </div>
+    <main>
+        <div id="section-explore" class="view-section active">
+            <div class="explore-layout">
+                <div class="shape-selector">
+                    <button class="shape-btn active" onclick="setShape('cube')" data-i18n="s_cube">正方體</button>
+                    <button class="shape-btn" onclick="setShape('cylinder')" data-i18n="s_cylinder">圓柱體</button>
+                    <button class="shape-btn" onclick="setShape('tri-prism')" data-i18n="s_triprism">三角柱</button>
+                    <button class="shape-btn" onclick="setShape('sq-pyramid')" data-i18n="s_sqpyramid">四角錐</button>
+                    <button class="shape-btn" onclick="setShape('cone')" data-i18n="s_cone">圓錐體</button>
+                    <button class="shape-btn" onclick="setShape('sphere')" data-i18n="s_sphere">球體</button>
                 </div>
-                
-                <div class="mt-8 bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-50">
-                    <div class="flex justify-between items-center mb-8">
-                        <span class="text-sm font-black text-slate-400 uppercase tracking-widest" id="lbl-net">展開圖狀態</span>
-                        <span class="text-5xl font-black text-indigo-600" id="percent-display">0%</span>
-                        <span class="text-sm font-black text-slate-400 uppercase tracking-widest" id="lbl-solid">立體圖形</span>
-                    </div>
-                    <input type="range" id="fold-slider" min="0" max="100" value="0">
-                </div>
-            </div>
 
-            <div class="lg:col-span-4 space-y-4">
-                <div class="grid grid-cols-1 gap-4" id="shape-menu"></div>
-                <div class="mt-6 p-8 bg-indigo-600 rounded-[3rem] text-white shadow-2xl shadow-indigo-100 relative overflow-hidden">
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="text-3xl">💡</span>
-                            <h4 class="font-black text-xl">學習小提示</h4>
-                        </div>
-                        <p id="learning-tip" class="text-indigo-50 leading-relaxed font-medium text-lg">請選擇圖形開始學習！</p>
+                <div class="stage-container" id="stage">
+                    <div class="scene">
+                        <div class="object-3d" id="model3d">
+                            </div>
                     </div>
+                    <div class="instruction-overlay" data-i18n="drag_hint">👆 拖曳旋轉 / Drag to Rotate</div>
+                </div>
+
+                <div class="info-panel">
+                    <h2 class="info-title" id="infoTitle">正方體 (Cube)</h2>
+                    <div class="info-badges" id="infoBadges"></div>
+                    <p class="info-desc" id="infoDesc">所有面都是正方形，而且大小相同。</p>
                 </div>
             </div>
         </div>
 
-        <div id="quiz-panel" class="hidden max-w-6xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 id="quiz-title" class="text-4xl font-black mb-4 text-slate-900">小小幾何專家挑戰</h2>
-                <p id="quiz-desc" class="text-slate-500 text-xl">觀察展開圖的比例與連接處，選出唯一正確的答案。</p>
+        <div id="section-game" class="view-section">
+            <div class="game-layout">
+                <div class="stats-bar">
+                    <span data-i18n="score">得分:</span> <span id="scoreVal" class="score-box">0</span>
+                </div>
+
+                <div class="question-area">
+                    <span class="q-item" id="qIcon">📦</span>
+                    <h3 class="q-text" id="qName">快遞紙箱</h3>
+                    <p style="font-size: 0.8rem; color:#999;" data-i18n="game_instruction">這是哪一類圖形？點擊下方答案。</p>
+                </div>
+
+                <div class="drop-grid">
+                    <div class="drop-target" onclick="checkAnswer('prism')">
+                        <span class="drop-icon">🧊</span>
+                        <h4 data-i18n="cat_prism">柱體</h4>
+                    </div>
+                    <div class="drop-target" onclick="checkAnswer('pyramid')">
+                        <span class="drop-icon">⛺</span>
+                        <h4 data-i18n="cat_pyramid">錐體</h4>
+                    </div>
+                    <div class="drop-target" onclick="checkAnswer('sphere')">
+                        <span class="drop-icon">⚽</span>
+                        <h4 data-i18n="cat_sphere">球體</h4>
+                    </div>
+                </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="quiz-options"></div>
-            <div id="quiz-feedback" class="mt-12 p-10 rounded-[3rem] hidden text-center text-3xl font-black shadow-2xl transition-all"></div>
         </div>
     </main>
 
-    <script>
-        let scene, camera, renderer, controls, rootPivot = new THREE.Group();
-        let hingeList = []; 
-        let currentLang = 'zh';
+    <div class="feedback-modal" id="feedbackModal">
+        <div class="modal-content">
+            <h2 id="fbTitle">Correct!</h2>
+            <p id="fbMsg" style="margin: 10px 0;">Good Job</p>
+            <button class="btn-sm" style="background:var(--primary); color:white; padding: 8px 20px;" onclick="closeModal()" data-i18n="next_q">下一題</button>
+        </div>
+    </div>
 
-        const SHAPE_DATA = {
-            cube: { zh: "正方體", en: "Cube", tip: "正方體有 6 個相同的面。在展開圖中，中間 4 個面連成線，上下各 1 個，是經典的「1-4-1」結構。" },
-            rect: { zh: "長方體", en: "Cuboid", tip: "長方體由 3 對全等的矩形組成。展開圖中，相對的面面積必須相等且不能直接相連。" },
-            tri_prism: { zh: "三角柱", en: "Tri-Prism", tip: "三角柱由 2 個三角形底面和 3 個矩形側面組成。側面摺疊的角度是 120 度。" },
-            pyramid: { zh: "四角錐", en: "Sq. Pyramid", tip: "四角錐由 1 個正方形和 4 個三角形組成。側面三角形會向上摺起並在頂點匯合。" }
+    <script>
+        // --- DATA & CONFIG ---
+        const langData = {
+            'zh-HK': {
+                app_title: "3D 形狀實驗室", tab_explore: "探索", tab_game: "挑戰",
+                s_cube: "正方體", s_cylinder: "圓柱體", s_triprism: "三角柱", s_sqpyramid: "四角錐", s_cone: "圓錐體", s_sphere: "球體",
+                drag_hint: "👆 拖曳畫面旋轉",
+                cat_prism: "柱體", cat_pyramid: "錐體", cat_sphere: "球體",
+                score: "得分:", game_instruction: "點擊下方正確的分類", next_q: "下一題",
+                correct: "答對了！", wrong: "再試一次！",
+                // Descriptions
+                d_cube: "屬於柱體。有 6 個平的面，每個面都是正方形。",
+                d_cylinder: "屬於柱體。上下兩個面是圓形，且大小相同。側面是曲面。",
+                d_triprism: "屬於柱體。上下底面是三角形。側面是長方形。",
+                d_sqpyramid: "屬於錐體。底部是正方形，有 4 個三角形側面聚焦於頂點。",
+                d_cone: "屬於錐體。底部是圓形，側面是曲面，縮小到一個尖頂。",
+                d_sphere: "球體。從中心到表面任何一點的距離都相等。沒有平的面。",
+                // Game Items
+                i_box: "紙箱", i_can: "汽水罐", i_tent: "帳篷", i_ball: "籃球", i_orange: "橙", i_icecream: "雪糕筒", i_book: "書本", i_battery: "電池"
+            },
+            'en': {
+                app_title: "3D Shape Lab", tab_explore: "Explore", tab_game: "Challenge",
+                s_cube: "Cube", s_cylinder: "Cylinder", s_triprism: "Tri-Prism", s_sqpyramid: "Sq. Pyramid", s_cone: "Cone", s_sphere: "Sphere",
+                drag_hint: "👆 Drag to Rotate",
+                cat_prism: "Prism", cat_pyramid: "Pyramid", cat_sphere: "Sphere",
+                score: "Score:", game_instruction: "Tap the correct category below", next_q: "Next",
+                correct: "Correct!", wrong: "Try Again!",
+                // Descriptions
+                d_cube: "A Prism. Has 6 flat faces, all are squares.",
+                d_cylinder: "A Prism family. Top and bottom are congruent circles. Has a curved side.",
+                d_triprism: "A Prism. Bases are triangles. Side faces are rectangles.",
+                d_sqpyramid: "A Pyramid. Base is a square. 4 triangular faces meet at the apex.",
+                d_cone: "A Pyramid family. Base is a circle. Tapers smoothly to a point.",
+                d_sphere: "A Sphere. Every point on the surface is the same distance from the center.",
+                // Game Items
+                i_box: "Box", i_can: "Soda Can", i_tent: "Tent", i_ball: "Basketball", i_orange: "Orange", i_icecream: "Ice Cream Cone", i_book: "Book", i_battery: "Battery"
+            }
         };
 
-        function init() {
-            const container = document.getElementById('canvas-container');
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(40, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-            camera.position.set(10, 10, 12);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.offsetWidth, container.offsetHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            container.appendChild(renderer.domElement);
-
-            // 光影修復：解決黑面問題
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const light1 = new THREE.DirectionalLight(0xffffff, 0.6);
-            light1.position.set(5, 10, 7);
-            scene.add(light1);
-            const light2 = new THREE.PointLight(0xffffff, 0.5);
-            light2.position.set(-10, -5, -10);
-            scene.add(light2);
-
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            scene.add(rootPivot);
-
-            renderMenu();
-            loadShape('cube');
-            animate();
-        }
-
-        function createPanel(w, h, color, px, py) {
-            const group = new THREE.Group();
-            const mesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(w, h),
-                new THREE.MeshStandardMaterial({ 
-                    color: color, 
-                    side: THREE.DoubleSide, 
-                    transparent: true, 
-                    opacity: 0.9,
-                    roughness: 0.4,
-                    metalness: 0.1
-                })
-            );
-            const edges = new THREE.LineSegments(
-                new THREE.EdgesGeometry(mesh.geometry),
-                new THREE.LineBasicMaterial({ color: 0x2d3748, linewidth: 2 })
-            );
-            mesh.add(edges);
-            mesh.position.set(px, py, 0); 
-            group.add(mesh);
-            return { group, w, h };
-        }
-
-        function loadShape(type) {
-            while(rootPivot.children.length > 0) rootPivot.remove(rootPivot.children[0]);
-            hingeList = [];
-            const cBase = 0x6366f1, cSide = 0x818cf8;
-
-            if(type === 'cube') {
-                const S = 2;
-                const b = createPanel(S, S, cBase, 0, 0); b.group.rotation.x = -Math.PI/2; rootPivot.add(b.group);
-                const add = (p, x, y, ax, ang, mx, my) => {
-                    const n = createPanel(S, S, cSide, mx, my); n.group.position.set(x, y, 0);
-                    p.add(n.group); hingeList.push({ obj: n.group, axis: ax, angle: ang });
-                    return n.group;
-                };
-                const f = add(b.group, 0, S/2, 'x', -Math.PI/2, 0, S/2);
-                add(b.group, 0, -S/2, 'x', Math.PI/2, 0, -S/2);
-                add(b.group, -S/2, 0, 'y', -Math.PI/2, -S/2, 0);
-                add(b.group, S/2, 0, 'y', Math.PI/2, S/2, 0);
-                add(f, 0, S, 'x', -Math.PI/2, 0, S/2);
+        const shapeConfigs = {
+            'cube': { 
+                type: 'prism', 
+                html: `<div class="cube"><div class="face f-front prism-face"></div><div class="face f-back prism-face"></div><div class="face f-right prism-face"></div><div class="face f-left prism-face"></div><div class="face f-top prism-face"></div><div class="face f-bottom prism-face"></div></div>` 
+            },
+            'tri-prism': {
+                type: 'prism',
+                html: `<div class="tri-prism"><div class="face-tri t-top"></div><div class="face-tri t-bottom"></div><div class="face-side s1"></div><div class="face-side s2"></div><div class="face-side s3"></div></div>`
+            },
+            'cylinder': {
+                type: 'prism',
+                // Generating 12 sides for cylinder approximation
+                html: (() => {
+                    let s = '<div class="cylinder"><div class="lid lid-top"></div><div class="lid lid-bottom"></div>';
+                    for(let i=0; i<12; i++) {
+                        s += `<div class="side" style="transform: rotateY(${i*30}deg) translateZ(48px);"></div>`;
+                    }
+                    s += '</div>';
+                    return s;
+                })()
+            },
+            'sq-pyramid': {
+                type: 'pyramid',
+                html: `<div class="sq-pyramid"><div class="base"></div><div class="tri t1 pyramid-face"></div><div class="tri t2 pyramid-face"></div><div class="tri t3 pyramid-face"></div><div class="tri t4 pyramid-face"></div></div>`
+            },
+            'cone': {
+                type: 'pyramid',
+                // Approximating cone with 16 thin triangles
+                html: (() => {
+                    let s = '<div class="cone"><div class="cone-base"></div>';
+                    for(let i=0; i<16; i++) {
+                        s += `<div class="cone-side" style="transform: rotateY(${i*(360/16)}deg) translateZ(10px) rotateX(15deg);"></div>`;
+                    }
+                    s += '</div>';
+                    return s;
+                })()
+            },
+            'sphere': {
+                type: 'sphere',
+                html: `<div class="sphere-container"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>`
             }
-            else if(type === 'tri_prism') {
-                const S = 2.2, L = 3.8;
-                const b = createPanel(S, L, cBase, 0, 0); b.group.rotation.x = -Math.PI/2; rootPivot.add(b.group);
-                const addS = (x, ang) => {
-                    const p = createPanel(S, L, cSide, x, 0); p.group.position.set(x, 0, 0);
-                    b.group.add(p.group); hingeList.push({obj: p.group, axis: 'y', angle: ang});
-                };
-                addS(-S/2, -Math.PI/1.5);
-                addS(S/2, Math.PI/1.5);
-                const triGeo = new THREE.CircleGeometry(S/Math.sqrt(3), 3);
-                const addT = (y, ang, rZ) => {
-                    const g = new THREE.Group(); g.position.set(0, y, 0); b.group.add(g);
-                    const m = new THREE.Mesh(triGeo, new THREE.MeshStandardMaterial({color:cSide, side:2}));
-                    m.rotation.z = rZ; m.position.y = (y>0?1:-1)*(S*Math.sqrt(3)/6);
-                    if(y<0) m.scale.y = -1;
-                    g.add(m); hingeList.push({obj: g, axis:'x', angle: ang});
-                };
-                addT(L/2, -Math.PI/2, Math.PI/6);
-                addT(-L/2, Math.PI/2, -Math.PI/6);
-            }
-            else if(type === 'pyramid') {
-                const S = 2.8;
-                const hT = Math.sqrt(S*S - (S/2)*(S/2));
-                const b = createPanel(S, S, cBase, 0, 0); b.group.rotation.x = -Math.PI/2; rootPivot.add(b.group);
-                const triGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-S/2,0,0), new THREE.Vector3(S/2,0,0), new THREE.Vector3(0,hT,0)]);
-                const addT = (x, y, rZ, ax, ang) => {
-                    const g = new THREE.Group(); g.position.set(x, y, 0); g.rotation.z = rZ; b.group.add(g);
-                    const m = new THREE.Mesh(triGeo, new THREE.MeshStandardMaterial({color:cSide, side:2}));
-                    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeo), new THREE.LineBasicMaterial({color:0x1a202c})));
-                    g.add(m); hingeList.push({obj:g, axis:ax, angle:ang});
-                };
-                const ang = -1.23;
-                addT(0, S/2, 0, 'x', ang);
-                addT(0, -S/2, Math.PI, 'x', ang);
-                addT(-S/2, 0, Math.PI/2, 'y', ang);
-                addT(S/2, 0, -Math.PI/2, 'y', -ang);
-            }
-            else if(type === 'rect') {
-                const L=4, W=2.5, H=1.6;
-                const b = createPanel(L, W, cBase, 0, 0); b.group.rotation.x = -Math.PI/2; rootPivot.add(b.group);
-                const add = (p, w, h, x, y, ax, ang, mx, my, rZ=0) => {
-                    const g = createPanel(w, h, cSide, mx, my); g.group.position.set(x, y, 0);
-                    if(rZ) g.children[0].rotation.z = rZ;
-                    p.add(g.group); hingeList.push({obj: g.group, axis: ax, angle: ang});
-                    return g.group;
-                };
-                const f = add(b.group, L, H, 0, W/2, 'x', -Math.PI/2, 0, H/2);
-                add(b.group, L, H, 0, -W/2, 'x', Math.PI/2, 0, -H/2);
-                add(b.group, H, W, -L/2, 0, 'y', -Math.PI/2, -H/2, 0, Math.PI/2);
-                add(b.group, H, W, L/2, 0, 'y', Math.PI/2, H/2, 0, Math.PI/2);
-                add(f, L, W, 0, H, 'x', -Math.PI/2, 0, W/2);
-            }
+        };
 
-            document.getElementById('fold-slider').value = 0;
-            updateFolding(0);
-            document.getElementById('learning-tip').innerText = SHAPE_DATA[type][currentLang==='zh'?'tip':'tip'];
-        }
+        const quizItems = [
+            { id: 'i_box', icon: '📦', type: 'prism' },
+            { id: 'i_can', icon: '🥫', type: 'prism' },
+            { id: 'i_book', icon: '📘', type: 'prism' },
+            { id: 'i_battery', icon: '🔋', type: 'prism' },
+            { id: 'i_tent', icon: '⛺', type: 'pyramid' },
+            { id: 'i_icecream', icon: '🍦', type: 'pyramid' },
+            { id: 'i_ball', icon: '🏀', type: 'sphere' },
+            { id: 'i_orange', icon: '🍊', type: 'sphere' }
+        ];
 
-        function updateFolding(v) {
-            const p = v / 100;
-            hingeList.forEach(h => {
-                if(h.axis === 'x') h.obj.rotation.x = h.angle * p;
-                else h.obj.rotation.y = h.angle * p;
+        let currentLang = 'zh-HK';
+        let currentRotation = { x: -20, y: 30 };
+        let score = 0;
+        let currentQuizItem = null;
+
+        // --- INIT & EVENTS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLang();
+            setShape('cube');
+            initDragControl();
+            nextQuestion();
+        });
+
+        document.getElementById('langBtn').addEventListener('click', () => {
+            currentLang = currentLang === 'zh-HK' ? 'en' : 'zh-HK';
+            updateLang();
+            // Refresh info text for current shape
+            const currentShapeBtn = document.querySelector('.shape-btn.active');
+            if(currentShapeBtn) {
+                const shapeKey = currentShapeBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+                updateInfoText(shapeKey);
+            }
+            // Refresh Quiz text
+            if(currentQuizItem) {
+                document.getElementById('qName').innerText = langData[currentLang][currentQuizItem.id];
+            }
+        });
+
+        // --- CORE FUNCTIONS ---
+
+        function updateLang() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(langData[currentLang][key]) el.innerText = langData[currentLang][key];
             });
-            document.getElementById('percent-display').innerText = v + "%";
         }
 
-        document.getElementById('fold-slider').oninput = (e) => updateFolding(e.target.value);
+        function switchTab(tab) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('section-'+tab).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
 
-        // --- 測驗修復：Canvas 繪製 ---
-        function drawQuizNet(cvs, type) {
-            const ctx = cvs.getContext('2d');
-            const S = 35; ctx.clearRect(0,0,300,200);
-            ctx.strokeStyle = "#4f46e5"; ctx.lineWidth = 3; ctx.setLineDash([]);
-            const cx = 150, cy = 100;
+        function setShape(key) {
+            // Update UI Buttons
+            document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active'); // Note: this relies on event bubbling if called from onclick
             
-            const nets = {
-                ok1: [[0,0], [1,0], [-1,0], [-2,0], [0,1], [0,-1]], 
-                err1: [[0,0], [1,0], [2,0], [3,0], [0,1], [0,-1]], 
-                pyr: [[0,0], [1,0], [-1,0], [0,1], [0,-1]],
-                rect: [[0,0], [1.2,0], [-1.2,0], [-2.4,0], [0,0.8], [0,-0.8]]
+            // Render 3D
+            const container = document.getElementById('model3d');
+            container.innerHTML = shapeConfigs[key].html;
+            
+            // Reset Rotation
+            currentRotation = { x: -20, y: 30 };
+            applyRotation();
+
+            updateInfoText(key);
+        }
+
+        function updateInfoText(key) {
+            const config = shapeConfigs[key];
+            const titleKey = 's_' + key.replace('-',''); // simple mapping
+            const descKey = 'd_' + key.replace('-','');
+            
+            document.getElementById('infoTitle').innerText = langData[currentLang][titleKey] || langData[currentLang]['s_'+key];
+            document.getElementById('infoDesc').innerText = langData[currentLang][descKey];
+            
+            const badge = document.getElementById('infoBadges');
+            const typeLabel = langData[currentLang]['cat_' + config.type];
+            badge.innerHTML = `<span class="badge badge-${config.type}">${typeLabel}</span>`;
+        }
+
+        // --- 3D ROTATION LOGIC (MOUSE/TOUCH) ---
+        function initDragControl() {
+            const stage = document.getElementById('stage');
+            let isDragging = false;
+            let startX, startY;
+
+            const startDrag = (e) => {
+                isDragging = true;
+                startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             };
 
-            const p = nets[type];
-            p.forEach(b => {
-                if(type === 'pyr' && b !== p[0]) {
-                    ctx.beginPath();
-                    const x = cx + b[0]*S, y = cy - b[1]*S;
-                    if(b[0]!==0) { ctx.moveTo(x+(b[0]>0?-S/2:S/2), y-S/2); ctx.lineTo(x+(b[0]>0?-S/2:S/2), y+S/2); ctx.lineTo(x+(b[0]>0?S/2:-S/2), y); }
-                    else { ctx.moveTo(x-S/2, y+(b[1]>0?S/2:-S/2)); ctx.lineTo(x+S/2, y+(b[1]>0?S/2:-S/2)); ctx.lineTo(x, y+(b[1]>0?-S/2:S/2)); }
-                    ctx.closePath(); ctx.stroke();
-                } else {
-                    const w = (type==='rect' && b[1]===0) ? S*1.2 : S;
-                    const h = (type==='rect' && Math.abs(b[1])>0) ? S*0.8 : S;
-                    ctx.strokeRect(cx+b[0]*S-w/2, cy-b[1]*S-h/2, w, h);
-                }
-            });
+            const doDrag = (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                
+                const deltaX = clientX - startX;
+                const deltaY = clientY - startY;
+
+                currentRotation.y += deltaX * 0.5;
+                currentRotation.x -= deltaY * 0.5; // Invert Y axis for natural feel
+
+                applyRotation();
+                
+                startX = clientX;
+                startY = clientY;
+            };
+
+            const endDrag = () => { isDragging = false; };
+
+            stage.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', endDrag);
+
+            stage.addEventListener('touchstart', startDrag);
+            document.addEventListener('touchmove', doDrag);
+            document.addEventListener('touchend', endDrag);
         }
 
-        function startQuiz() {
-            const container = document.getElementById('quiz-options');
-            container.innerHTML = '';
-            document.getElementById('quiz-feedback').classList.add('hidden');
+        function applyRotation() {
+            const model = document.getElementById('model3d');
+            model.style.transform = `rotateX(${currentRotation.x}deg) rotateY(${currentRotation.y}deg)`;
+        }
+
+        // --- GAME LOGIC ---
+        function nextQuestion() {
+            const randIndex = Math.floor(Math.random() * quizItems.length);
+            currentQuizItem = quizItems[randIndex];
+            document.getElementById('qIcon').innerText = currentQuizItem.icon;
+            document.getElementById('qName').innerText = langData[currentLang][currentQuizItem.id];
+        }
+
+        function checkAnswer(userChoice) {
+            const isCorrect = userChoice === currentQuizItem.type;
+            const modal = document.getElementById('feedbackModal');
+            const title = document.getElementById('fbTitle');
+            const msg = document.getElementById('fbMsg');
             
-            const qSet = [
-                { title: "哪個是正確的正方體展開圖？", pool: [{t:'ok1', ok:true}, {t:'err1', ok:false}] },
-                { title: "長方體的展開圖中，對面應該？", pool: [{t:'rect', l:'大小相同', ok:true}, {t:'ok1', l:'大小不一', ok:false}] },
-                { title: "這個展開圖能摺成什麼立體？", pool: [{t:'pyr', l:'四角錐', ok:true}, {t:'rect', l:'三角柱', ok:false}] }
-            ];
-
-            const currentQ = qSet[Math.floor(Math.random() * qSet.length)];
-            document.getElementById('quiz-title').innerText = currentQ.title;
-
-            currentQ.pool.sort(() => Math.random() - 0.5).forEach(item => {
-                const card = document.createElement('div');
-                card.className = "quiz-card";
-                const cvs = document.createElement('canvas'); cvs.width=300; cvs.height=180; cvs.className="mx-auto mb-4";
-                card.appendChild(cvs);
-                if(item.l) { const label = document.createElement('div'); label.innerText = item.l; label.className="font-black text-indigo-600 text-lg"; card.appendChild(label); }
-                card.onclick = () => {
-                    const fb = document.getElementById('quiz-feedback');
-                    fb.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
-                    if(item.ok) { fb.innerText = "✅ 答對了！太聰明了！"; fb.classList.add('bg-green-100','text-green-700'); setTimeout(startQuiz, 2500); }
-                    else { fb.innerText = "❌ 答錯了，再仔細數數面和邊！"; fb.classList.add('bg-red-100','text-red-700'); }
-                };
-                container.appendChild(card);
-                drawQuizNet(cvs, item.t);
-            });
+            modal.style.display = 'flex';
+            
+            if(isCorrect) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                title.innerText = langData[currentLang].correct;
+                title.style.color = 'var(--success)';
+                msg.innerText = "🎉 +10 Points";
+            } else {
+                title.innerText = langData[currentLang].wrong;
+                title.style.color = 'var(--error)';
+                msg.innerText = "💪 Keep trying!";
+            }
         }
 
-        function switchMode(m) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('btn-active'));
-            document.getElementById('tab-'+m).classList.add('btn-active');
-            document.getElementById('learn-panel').classList.toggle('hidden', m!=='learn');
-            document.getElementById('quiz-panel').classList.toggle('hidden', m!=='quiz');
-            if(m==='quiz') startQuiz();
+        function closeModal() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            nextQuestion();
         }
 
-        function toggleLang() { currentLang = (currentLang==='zh')?'en':'zh'; updateUI(); }
-        function updateUI() {
-            document.getElementById('tab-learn').innerText = currentLang==='zh'?'動態學習':'Learn';
-            document.getElementById('tab-quiz').innerText = currentLang==='zh'?'挑戰測驗':'Quiz';
-            renderMenu();
-        }
-
-        function renderMenu() {
-            const m = document.getElementById('shape-menu'); m.innerHTML = '';
-            const data = [{id:'cube', i:'🧊'}, {id:'rect', i:'📦'}, {id:'tri_prism', i:'🧀'}, {id:'pyramid', i:'⛺'}];
-            data.forEach(d => {
-                const b = document.createElement('button');
-                b.className = "bg-white hover:bg-indigo-50 p-7 rounded-[2.5rem] border-2 border-slate-100 flex items-center gap-6 transition-all shadow-sm group";
-                b.onclick = () => loadShape(d.id);
-                b.innerHTML = `<span class="text-4xl group-hover:scale-110 transition-transform">${d.i}</span><span class="font-black text-xl">${SHAPE_DATA[d.id][currentLang]}</span>`;
-                m.appendChild(b);
-            });
-        }
-
-        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
-        window.onload = init;
     </script>
 </body>
 </html>
