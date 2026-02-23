@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D 形狀小奇兵 3.2 Professional</title>
+    <title>3D 形狀小奇兵 4.0 Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <style>
         :root {
-            --primary: #FF7E5F;
-            --secondary: #6B66FF;
+            --primary: #FF5E5E;
+            --secondary: #4f46e5;
             --success: #2ecc71;
             --error: #e74c3c;
-            --bg: #FFF9E6;
-            --card: rgba(255, 255, 255, 0.95);
+            --bg: #FFFDF5;
+            --card: rgba(255, 255, 255, 0.98);
         }
 
         body { 
             margin: 0; overflow: hidden; 
-            font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif;
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
             background: var(--bg); touch-action: none;
         }
         
@@ -29,36 +29,48 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
 
         header { 
-            pointer-events: auto; margin: 10px; padding: 12px 20px;
-            background: var(--card); border-radius: 50px; border: 3px solid var(--primary);
-            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            pointer-events: auto; margin: 15px; padding: 15px 25px;
+            background: none; /* Logo 退地 */
+            display: flex; justify-content: space-between; align-items: center;
         }
         
-        /* Logo 增大一倍 */
-        .logo-box { width: 200px; height: 80px; background: #f0f0f0; border-radius: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        /* Logo 放大與退地 */
+        .logo-box { width: 280px; height: 120px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .logo-box img { width: 100%; height: 100%; object-fit: contain; }
         
-        .top-controls { display: flex; gap: 8px; }
-        .lang-btn { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .mode-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .top-controls { display: flex; gap: 15px; }
+        .lang-btn { background: #555; color: white; border: none; padding: 12px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        .mode-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 1.3rem; box-shadow: 0 6px 0 #CC4A4A; }
 
         .info-card { 
-            pointer-events: auto; position: absolute; top: 110px; right: 15px; width: 240px;
-            background: var(--card); padding: 15px; border-radius: 20px; border: 3px solid var(--secondary);
-            box-shadow: 0 6px 15px rgba(107, 102, 255, 0.2);
+            pointer-events: auto; position: absolute; top: 150px; left: 25px; width: 300px;
+            background: var(--card); padding: 25px; border-radius: 30px; border: 4px solid var(--secondary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
+        .info-card h2 { margin: 0; color: var(--secondary); font-size: 1.8rem; }
+        .info-card p { margin: 10px 0; font-size: 1.2rem; color: #333; line-height: 1.4; }
 
-        .controls-bar { pointer-events: auto; display: flex; gap: 10px; overflow-x: auto; padding: 15px; background: white; border-top: 3px solid var(--primary); }
-        .shape-btn { background: #fff; border: 2px solid var(--primary); padding: 10px 20px; border-radius: 25px; font-weight: bold; color: var(--primary); white-space: nowrap; cursor: pointer; }
-        .shape-btn.active { background: var(--primary); color: white; }
+        /* 底部按鈕放大 */
+        .controls-bar { pointer-events: auto; display: flex; gap: 15px; overflow-x: auto; padding: 20px; background: white; border-top: 5px solid var(--primary); }
+        .shape-btn { 
+            background: #fff; border: 3px solid var(--primary); padding: 15px 30px; border-radius: 40px; 
+            font-weight: bold; color: var(--primary); white-space: nowrap; cursor: pointer; font-size: 1.3rem;
+            transition: 0.2s;
+        }
+        .shape-btn.active { background: var(--primary); color: white; transform: scale(1.1); }
 
-        /* 遊戲層 */
-        #game-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
-        .quiz-box { background: white; width: 85%; max-width: 450px; border-radius: 30px; padding: 30px; text-align: center; border: 5px solid var(--secondary); }
-        .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .ans-btn { background: #f0f0ff; border: 2px solid var(--secondary); padding: 18px 5px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        /* 挑戰模式介面放大 */
+        #game-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
+        .quiz-box { background: white; width: 90%; max-width: 600px; border-radius: 50px; padding: 40px; text-align: center; border: 8px solid var(--secondary); }
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 30px; }
+        .ans-btn { background: #f0f0ff; border: 3px solid var(--secondary); padding: 25px 5px; border-radius: 25px; font-weight: bold; font-size: 1.5rem; cursor: pointer; }
         
-        #cursor-tooltip { position: fixed; background: white; border: 2px solid var(--primary); padding: 5px 12px; border-radius: 10px; font-weight: bold; z-index: 1000; pointer-events: none; display: none; }
+        #cursor-tooltip { 
+            position: fixed; background: white; border: 4px solid var(--primary); 
+            padding: 10px 20px; border-radius: 15px; font-weight: bold; font-size: 1.4rem;
+            z-index: 1000; pointer-events: none; display: none; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -69,7 +81,7 @@
     <div id="ui-layer">
         <header>
             <div class="logo-box">
-                <img src="logo.png" alt="LOGO" id="appLogo" onerror="this.style.display='none'; this.parentNode.innerText='Your Logo Here';">
+                <img src="logo.png" alt="LOGO" id="appLogo" onerror="this.style.display='none'; this.parentNode.innerText='LOGO';">
             </div>
             <div class="top-controls">
                 <button class="lang-btn" onclick="toggleLang()">EN/中</button>
@@ -78,38 +90,36 @@
         </header>
 
         <div class="info-card" id="infoCard">
-            <h2 id="infoTitle" style="margin:0; color:var(--secondary);">正方體</h2>
-            <p id="infoDesc" style="margin:8px 0; font-size:1rem; color:#444;">載入中...</p>
+            <h2 id="infoTitle">載入中...</h2>
+            <p id="infoDesc">...</p>
         </div>
 
         <div class="controls-bar" id="controlsBar">
-            <button class="shape-btn active" onclick="loadShape('cube')">🧊 <span class="s-n">正方體</span></button>
-            <button class="shape-btn" onclick="loadShape('cylinder')">🛢️ <span class="s-n">圓柱體</span></button>
-            <button class="shape-btn" onclick="loadShape('cone')">🍦 <span class="s-n">圓錐體</span></button>
-            <button class="shape-btn" onclick="loadShape('sq_pyramid')">⛺ <span class="s-n">四角錐</span></button>
-            <button class="shape-btn" onclick="loadShape('tri_prism')">🧀 <span class="s-n">三角柱</span></button>
-            <button class="shape-btn" onclick="loadShape('sphere')">⚽ <span class="s-n">球體</span></button>
+            <button class="shape-btn active" onclick="loadShape('cube')">正方體</button>
+            <button class="shape-btn" onclick="loadShape('cylinder')">圓柱體</button>
+            <button class="shape-btn" onclick="loadShape('cone')">圓錐體</button>
+            <button class="shape-btn" onclick="loadShape('sq_pyramid')">四角錐</button>
+            <button class="shape-btn" onclick="loadShape('tri_prism')">三角柱</button>
+            <button class="shape-btn" onclick="loadShape('sphere')">球體</button>
         </div>
     </div>
 
     <div id="game-layer">
         <div class="quiz-box" id="quiz-screen">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <span id="quiz-progress" style="font-weight:bold; color:var(--secondary); font-size:1.2rem;">題目: 1 / 6</span>
-                <button onclick="exitGame()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">❌</button>
+                <span id="quiz-progress" style="font-weight:bold; color:var(--secondary); font-size:1.5rem;">題目: 1 / 6</span>
+                <button onclick="exitGame()" style="border:none; background:none; font-size:2rem; cursor:pointer;">❌</button>
             </div>
-            <div id="qIcon" style="font-size:5rem; margin-bottom:15px;">📦</div>
-            <h3 id="qText" style="font-size:1.4rem;">這是什麼？</h3>
+            <div id="qIcon" style="font-size:7rem; margin-bottom:20px;">📦</div>
+            <h3 id="qText" style="font-size:2rem;">這是什麼？</h3>
             <div id="gameArea"></div>
-            <div id="feedback" style="margin-top:15px; font-weight:bold; height:24px; font-size:1.2rem;"></div>
-            <button onclick="skipQuestion()" style="margin-top:20px; background:none; border:1px solid #ccc; color:#888; padding:8px 20px; border-radius:10px; cursor:pointer;">略過 Skip</button>
+            <div id="feedback" style="margin-top:20px; font-weight:bold; height:30px; font-size:1.8rem;"></div>
         </div>
 
         <div class="quiz-box" id="result-screen" style="display:none;">
-            <h2 style="color:var(--primary); font-size:2rem;">完成挑戰！</h2>
-            <div id="resScore" style="font-size:4rem; font-weight:bold; color:var(--secondary); margin:20px 0;">60分</div>
-            <p id="resFeedback" style="font-size:1.2rem;">你表現得太棒了！</p>
-            <button class="ans-btn" style="width:100%; background:var(--primary); color:white; margin-top:20px;" onclick="exitGame()">返回觀察模式</button>
+            <h2 style="color:var(--primary); font-size:3rem;">挑戰完成！</h2>
+            <div id="resScore" style="font-size:6rem; font-weight:bold; color:var(--secondary); margin:30px 0;">60分</div>
+            <button class="ans-btn" style="width:100%; background:var(--primary); color:white;" onclick="exitGame()">返回</button>
         </div>
     </div>
 
@@ -118,19 +128,19 @@
             zh: {
                 face: "面 (Face)", edge: "邊 (Edge)", vertex: "頂點 (Vertex)",
                 prism: "柱體", pyramid: "錐體", sphere: "球體",
-                correct: "太棒了！🌟", wrong: "不對喔！再試一次", finish: "完成挑戰！",
+                correct: "答對了！🌟", wrong: "加油！再試一次",
                 shapes: {
-                    cube: ["正方體", "由 6 個正方形組成，有 8 個頂點。"],
+                    cube: ["正方體", "像骰子一樣，有 6 個面。"],
                     cylinder: ["圓柱體", "像汽水罐，上下底面是圓形。"],
-                    cone: ["圓錐體", "像派對帽，只有 1 個尖頂。"],
-                    sq_pyramid: ["四角錐", "底面是方形，側面是 4 個三角形。"],
-                    tri_prism: ["三角柱", "底面是三角形，側面是 3 個長方形。"],
-                    sphere: ["球體", "圓溜溜的，沒有頂點也沒有邊。"]
+                    cone: ["圓錐體", "像派對帽，只有一個尖頂。"],
+                    sq_pyramid: ["四角錐", "底面是方形，側面是三角形。"],
+                    tri_prism: ["三角柱", "底面是三角形，側面是長方形。"],
+                    sphere: ["球體", "圓溜溜的，沒有頂點。"]
                 },
                 quizzes: [
                     { t: 'c', i: '📦', q: '快遞紙箱屬於哪一類？', a: 'prism' },
                     { t: 'c', i: '⚽', q: '足球屬於哪一類？', a: 'sphere' },
-                    { t: 'c', i: '⛺', q: '這帳篷屬於哪一類？', a: 'prism' }, // 屋型帳篷是三角柱
+                    { t: 'c', i: '⛺', q: '這帳篷屬於哪一類？', a: 'prism' },
                     { t: 'i', i: '❓', q: '正方體有幾個頂點？', a: ['8'] },
                     { t: 'i', i: '🍦', q: '圓錐體有幾個頂點？', a: ['1'] },
                     { t: 'i', i: '⚽', q: '球體有幾個平面？', a: ['0'] }
@@ -139,22 +149,22 @@
             en: {
                 face: "Face", edge: "Edge", vertex: "Vertex",
                 prism: "Prism", pyramid: "Pyramid", sphere: "Sphere",
-                correct: "Amazing! 🌟", wrong: "Not quite!", finish: "Challenge Done!",
+                correct: "Correct! 🌟", wrong: "Try Again!",
                 shapes: {
-                    cube: ["Cube", "6 square faces and 8 vertices."],
+                    cube: ["Cube", "6 faces, 8 vertices."],
                     cylinder: ["Cylinder", "Like a can with circular bases."],
-                    cone: ["Cone", "Has 1 vertex like a hat."],
-                    sq_pyramid: ["Sq. Pyramid", "Square base and 4 triangles."],
-                    tri_prism: ["Tri. Prism", "Triangular bases, 3 rectangles."],
-                    sphere: ["Sphere", "Round, no vertices or edges."]
+                    cone: ["Cone", "Has 1 sharp vertex."],
+                    sq_pyramid: ["Sq. Pyramid", "Square base and triangles."],
+                    tri_prism: ["Tri. Prism", "Triangular bases."],
+                    sphere: ["Sphere", "Round and 3D!"]
                 },
                 quizzes: [
                     { t: 'c', i: '📦', q: 'What is a box?', a: 'prism' },
                     { t: 'c', i: '⚽', q: 'What is a ball?', a: 'sphere' },
                     { t: 'c', i: '⛺', q: 'What is this tent?', a: 'prism' },
-                    { t: 'i', i: '❓', q: 'How many vertices on a cube?', a: ['8'] },
-                    { t: 'i', i: '🍦', q: 'How many vertices on a cone?', a: ['1'] },
-                    { t: 'i', i: '⚽', q: 'How many flat faces on a sphere?', a: ['0'] }
+                    { t: 'i', i: '❓', q: 'Vertices on a cube?', a: ['8'] },
+                    { t: 'i', i: '🍦', q: 'Vertices on a cone?', a: ['1'] },
+                    { t: 'i', i: '⚽', q: 'Flat faces on a sphere?', a: ['0'] }
                 ]
             }
         };
@@ -164,20 +174,32 @@
 
         function init3D() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xFFF9E6);
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
-            camera.position.set(0, 2, 5);
+            scene.background = new THREE.Color(0xFFFDF5);
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 100);
+            camera.position.set(0, 3, 7);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+            // 光影優化：讓球體變立體
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+            const spotLight = new THREE.SpotLight(0xffffff, 0.8);
+            spotLight.position.set(5, 10, 5);
+            spotLight.castShadow = true;
+            scene.add(spotLight);
+            
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            fillLight.position.set(-5, 0, -5);
+            scene.add(fillLight);
+
             raycaster = new THREE.Raycaster();
-            raycaster.params.Line.threshold = 0.25; 
+            raycaster.params.Line.threshold = 0.3; 
             mouse = new THREE.Vector2();
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             scene.add(currentGroup);
+            
             window.addEventListener('resize', onResize);
             window.addEventListener('pointermove', onPointerMove);
             loadShape('cube');
@@ -194,43 +216,47 @@
         function loadShape(type) {
             while(currentGroup.children.length > 0) currentGroup.remove(currentGroup.children[0]);
             interactables = [];
-            
             const info = i18n[lang].shapes[type];
             document.getElementById('infoTitle').innerText = info[0];
             document.getElementById('infoDesc').innerText = info[1];
             
             let geo, vPos = [];
-            if(type==='cube') { geo = new THREE.BoxGeometry(1.8,1.8,1.8); vPos=[[0.9,0.9,0.9],[0.9,0.9,-0.9],[0.9,-0.9,0.9],[0.9,-0.9,-0.9],[-0.9,0.9,0.9],[-0.9,0.9,-0.9],[-0.9,-0.9,0.9],[-0.9,-0.9,-0.9]]; }
-            else if(type==='cylinder') geo = new THREE.CylinderGeometry(1,1,2.5,32);
-            else if(type==='cone') { geo = new THREE.ConeGeometry(1.2,2.5,32); vPos=[[0,1.25,0]]; }
-            else if(type==='sq_pyramid') { geo = new THREE.ConeGeometry(1.5,2.5,4); geo.rotateY(Math.PI/4); vPos=[[0,1.25,0],[1.06,-1.25,1.06],[-1.06,-1.25,1.06],[1.06,-1.25,-1.06],[-1.06,-1.25,-1.06]]; }
-            else if(type==='tri_prism') { geo = new THREE.CylinderGeometry(1.2,1.2,2.5,3); vPos=[[0,1.25,1.2],[1.04,1.25,-0.6],[-1.04,1.25,-0.6],[0,-1.25,1.2],[1.04,-1.25,-0.6],[-1.04,-1.25,-0.6]]; }
-            else if(type==='sphere') geo = new THREE.SphereGeometry(1.3,32,32);
+            if(type==='cube') { geo = new THREE.BoxGeometry(2,2,2); vPos=[[1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],[-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1]]; }
+            else if(type==='cylinder') geo = new THREE.CylinderGeometry(1.2,1.2,2.8,32);
+            else if(type==='cone') { geo = new THREE.ConeGeometry(1.4,2.8,32); vPos=[[0,1.4,0]]; }
+            else if(type==='sq_pyramid') { geo = new THREE.ConeGeometry(1.8,2.8,4); geo.rotateY(Math.PI/4); vPos=[[0,1.4,0],[1.27,-1.4,1.27],[-1.27,-1.4,1.27],[1.27,-1.4,-1.27],[-1.27,-1.4,-1.27]]; }
+            else if(type==='tri_prism') { geo = new THREE.CylinderGeometry(1.4,1.4,2.8,3); vPos=[[0,1.4,1.4],[1.2,1.4,-0.7],[-1.2,1.4,-0.7],[0,-1.4,1.4],[1.2,-1.4,-0.7],[-1.2,-1.4,-0.7]]; }
+            else if(type==='sphere') geo = new THREE.SphereGeometry(1.5,48,48); // 增加精細度
 
-            const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x6B66FF, transparent:true, opacity:0.85}));
+            // 真 3D 材質
+            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+                color: 0x4f46e5, 
+                metalness: 0.1, 
+                roughness: 0.3,
+                transparent: true,
+                opacity: 0.95
+            }));
             mesh.userData = { type: 'face', label: i18n[lang].face };
             currentGroup.add(mesh);
             interactables.push(mesh);
 
             if(type!=='sphere') {
-                const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xffffff, linewidth: 2}));
+                const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xffffff, linewidth:3}));
                 lines.userData = { type: 'edge', label: i18n[lang].edge };
                 currentGroup.add(lines);
                 interactables.push(lines);
             }
 
-            // 頂點感應球：直接作為 Mesh 的子物件，解決旋轉缺失問題
-            const vGeo = new THREE.SphereGeometry(0.25);
             vPos.forEach(p => {
-                const v = new THREE.Mesh(vGeo, new THREE.MeshBasicMaterial({color: 0xFF7E5F, transparent:true, opacity:0}));
+                const v = new THREE.Mesh(new THREE.SphereGeometry(0.28), new THREE.MeshBasicMaterial({color: 0xFF5E5E, transparent:true, opacity:0}));
                 v.position.set(p[0], p[1], p[2]);
                 v.userData = { type: 'vertex', label: i18n[lang].vertex };
-                v.renderOrder = 999; // 確保在最上層渲染
-                mesh.add(v); // 重要：掛載到 mesh 下
+                mesh.add(v); 
                 interactables.push(v);
             });
         }
 
+        let hovered = null;
         function onPointerMove(e) {
             if(document.getElementById('game-layer').style.display==='flex') return;
             mouse.x = (e.clientX/window.innerWidth)*2-1;
@@ -242,10 +268,20 @@
             if(intersects.length > 0) {
                 const hit = intersects.find(o=>o.object.userData.type==='vertex') || intersects.find(o=>o.object.userData.type==='edge') || intersects[0];
                 tip.style.display = 'block'; 
-                tip.style.left = e.clientX+12+'px'; 
-                tip.style.top = e.clientY+12+'px';
+                tip.style.left = e.clientX+15+'px'; 
+                tip.style.top = e.clientY+15+'px';
                 tip.innerText = hit.object.userData.label;
-            } else tip.style.display = 'none';
+                
+                if(hovered !== hit.object) {
+                    if(hovered && hovered.userData.type==='vertex') hovered.material.opacity = 0;
+                    hovered = hit.object;
+                    if(hovered.userData.type==='vertex') hovered.material.opacity = 1;
+                }
+            } else {
+                tip.style.display = 'none';
+                if(hovered && hovered.userData.type==='vertex') hovered.material.opacity = 0;
+                hovered = null;
+            }
         }
 
         function startChallenge() {
@@ -271,9 +307,9 @@
                     <button class="ans-btn" onclick="check('sphere',this)">${i18n[lang].sphere}</button>
                 </div>`;
             } else {
-                area.innerHTML = `<div class="input-area" style="display:flex; gap:10px; margin-top:20px;">
-                    <input type="text" id="ansIn" style="flex:1; padding:15px; border-radius:15px; border:2px solid #ddd; font-size:1.2rem; text-align:center;" placeholder="...">
-                    <button class="ans-btn" style="background:var(--secondary);color:white; padding:0 25px;" onclick="checkIn()">OK</button></div>`;
+                area.innerHTML = `<div class="input-area" style="display:flex; gap:15px; margin-top:30px;">
+                    <input type="text" id="ansIn" style="flex:1; padding:20px; border-radius:20px; border:3px solid #ddd; font-size:1.8rem; text-align:center;" placeholder="...">
+                    <button class="ans-btn" style="background:var(--secondary);color:white; padding:0 35px;" onclick="checkIn()">OK</button></div>`;
             }
         }
 
@@ -297,21 +333,10 @@
             setTimeout(nextQ, 1000);
         }
 
-        function skipQuestion() { nextQ(); }
-
-        function showRes() {
-            document.getElementById('quiz-screen').style.display='none';
-            document.getElementById('result-screen').style.display='block';
-            document.getElementById('resScore').innerText = score + "分";
-            document.getElementById('resFeedback').innerText = score >= 40 ? (lang==='zh'?"你表現得太棒了！":"Amazing Job!") : (lang==='zh'?"繼續努力！":"Keep it up!");
-        }
-
         function exitGame() { document.getElementById('game-layer').style.display='none'; }
-
         function toggleLang() { lang = lang==='zh'?'en':'zh'; updateUI(); }
-
         function updateUI() {
-            document.getElementById('modeText').innerText = lang==='zh'?'挑戰模式':'Challenge';
+            document.getElementById('modeText').innerText = lang==='zh'?'挑戰模式':'Quiz';
             const active = document.querySelector('.shape-btn.active');
             if(active) loadShape(active.getAttribute('onclick').match(/'([^']+)'/)[1]);
         }
