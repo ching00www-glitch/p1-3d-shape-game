@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D 形狀小奇兵 Shape Hero 2.0</title>
+    <title>3D 形狀小奇兵 3.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
@@ -39,7 +39,7 @@
         
         .top-controls { display: flex; gap: 8px; }
         .lang-btn { background: #555; color: white; border: none; padding: 6px 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-        .back-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .mode-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 15px; font-weight: bold; cursor: pointer; }
 
         /* 觀察模式面板 */
         .info-card { 
@@ -66,7 +66,8 @@
             background: rgba(15, 23, 42, 0.95); z-index: 50; display: none; 
             flex-direction: column; align-items: center; justify-content: center; pointer-events: auto;
         }
-        .quiz-box { background: white; width: 85%; max-width: 400px; border-radius: 30px; padding: 25px; text-align: center; border: 5px solid var(--secondary); }
+        .quiz-box { background: white; width: 85%; max-width: 400px; border-radius: 30px; padding: 25px; text-align: center; border: 5px solid var(--secondary); position: relative; }
+        
         .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
         .ans-btn { background: #f0f0ff; border: 2px solid var(--secondary); padding: 15px 5px; border-radius: 15px; font-weight: bold; cursor: pointer; }
         .ans-btn.correct { background: var(--success); color: white; }
@@ -76,7 +77,13 @@
         .game-input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 15px; font-size: 1.1rem; text-align: center; outline: none; }
         .submit-btn { background: var(--secondary); color: white; border: none; padding: 0 20px; border-radius: 15px; font-weight: bold; cursor: pointer; }
 
-        /* 工具提示 */
+        .skip-btn { margin-top: 15px; background: none; border: 1px solid #aaa; color: #777; padding: 5px 20px; border-radius: 10px; cursor: pointer; }
+
+        /* 結算畫面 */
+        #result-screen { display: none; }
+        .result-title { font-size: 2rem; color: var(--primary); margin-bottom: 10px; }
+        .result-score { font-size: 3rem; font-weight: bold; color: var(--secondary); margin-bottom: 20px; }
+
         #cursor-tooltip { position: fixed; background: white; border: 2px solid var(--primary); padding: 4px 10px; border-radius: 10px; font-weight: bold; z-index: 1000; pointer-events: none; display: none; }
     </style>
 </head>
@@ -92,7 +99,7 @@
             </div>
             <div class="top-controls">
                 <button class="lang-btn" onclick="toggleLang()">EN/中</button>
-                <button class="back-btn" id="btnMode" onclick="toggleMode()">➔ <span id="modeText">挑戰模式</span></button>
+                <button class="mode-btn" onclick="startChallenge()">➔ <span id="modeText">挑戰模式</span></button>
             </div>
         </header>
 
@@ -112,25 +119,34 @@
     </div>
 
     <div id="game-layer">
-        <div class="quiz-box">
+        <div class="quiz-box" id="quiz-screen">
             <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span id="txtScore" style="font-weight:bold; color:var(--secondary);">分數: 0</span>
-                <button onclick="toggleMode()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">❌</button>
+                <span id="quiz-progress" style="font-weight:bold; color:var(--secondary);">題目: 1 / 6</span>
+                <button onclick="exitGame()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">❌</button>
             </div>
             <div id="qIcon" style="font-size:4rem; margin-bottom:10px;">📦</div>
             <h3 id="qText">這是什麼？</h3>
             <div id="gameArea"></div>
-            <div id="feedback" style="margin-top:15px; font-weight:bold; height:20px;"></div>
+            <div id="feedback" style="margin-top:10px; font-weight:bold; height:20px;"></div>
+            <button class="skip-btn" onclick="skipQuestion()" id="btnSkip">略過此題 Skip</button>
+        </div>
+
+        <div class="quiz-box" id="result-screen">
+            <h2 class="result-title" id="resTitle">完成挑戰！</h2>
+            <div class="result-score" id="resScore">60</div>
+            <p id="resFeedback">你表現得太棒了！</p>
+            <button class="submit-btn" style="padding: 15px 40px; margin-top: 20px;" onclick="exitGame()" id="btnBack">返回主選單</button>
         </div>
     </div>
 
     <script>
         const i18n = {
             zh: {
-                mode_game: "挑戰模式", mode_explore: "返回觀察", score: "分數: ",
+                challenge: "挑戰模式", progress: "題目: ", score: "總分: ",
                 face: "面", edge: "邊", vertex: "頂點",
                 prism: "柱體", pyramid: "錐體", sphere: "球體",
-                check: "檢查", correct: "答對了！🌟", wrong: "不對喔，再試試！",
+                check: "檢查", correct: "答對了！🌟", wrong: "不對喔，再試試！", skip: "略過此題",
+                finish: "完成挑戰！", feedback_good: "你表現得太棒了！", feedback_keep: "繼續努力，你做得到的！",
                 shapes: {
                     cube: ["正方體", "有 6 個正方形的面。"],
                     cylinder: ["圓柱體", "上下是圓圓的平整面。"],
@@ -143,37 +159,44 @@
                     { type: 'c', icon: '📦', q: '快遞紙箱屬於哪一類？', a: 'prism' },
                     { type: 'c', icon: '🏀', q: '籃球屬於哪一類？', a: 'sphere' },
                     { type: 'c', icon: '⛺', q: '營幕屬於哪一類？', a: 'pyramid' },
-                    { type: 'i', icon: '❓', q: '正方體有幾個頂點？', a: ['8'], h: '數數看有幾個角' },
-                    { type: 'i', icon: '⚙️', q: '渦齒輪中長得像螺絲的是？', a: ['蝸桿', 'worm'], h: '長長的，有螺旋線' }
+                    { type: 'i', icon: '❓', q: '正方體有幾個頂點？', a: ['8'] },
+                    { type: 'i', icon: '🍦', q: '圓錐體有幾個頂點？', a: ['1'] },
+                    { type: 'c', icon: '🎲', q: '骰子屬於哪一類？', a: 'prism' },
+                    { type: 'i', icon: '⚽', q: '球體有幾個平面？', a: ['0'] },
+                    { type: 'c', icon: '🥪', q: '三明治屬於哪一類？', a: 'prism' }
                 ]
             },
             en: {
-                mode_game: "Challenge", mode_explore: "Back to View", score: "Score: ",
+                challenge: "Challenge", progress: "Question: ", score: "Total: ",
                 face: "Face", edge: "Edge", vertex: "Vertex",
                 prism: "Prism", pyramid: "Pyramid", sphere: "Sphere",
-                check: "Check", correct: "Correct! 🌟", wrong: "Try again!",
+                check: "Check", correct: "Correct! 🌟", wrong: "Try again!", skip: "Skip",
+                finish: "Completed!", feedback_good: "You did amazing!", feedback_keep: "Keep going, you can do it!",
                 shapes: {
                     cube: ["Cube", "6 square faces."],
                     cylinder: ["Cylinder", "Circular top and bottom."],
                     cone: ["Cone", "Has one sharp vertex."],
                     sq_pyramid: ["Sq. Pyramid", "Square base pyramid."],
-                    tri_prism: ["Tri. Prism", "Prism with triangular bases."],
-                    sphere: ["Sphere", "Perfectly round, no flat faces."]
+                    tri_prism: ["Tri. Prism", "Triangular base prism."],
+                    sphere: ["Sphere", "Perfectly round."]
                 },
                 quizzes: [
                     { type: 'c', icon: '📦', q: 'What is a cardboard box?', a: 'prism' },
                     { type: 'c', icon: '🏀', q: 'What is a basketball?', a: 'sphere' },
-                    { type: 'c', icon: '⛺', q: 'What is a camping tent?', a: 'pyramid' },
-                    { type: 'i', icon: '❓', q: 'How many vertices on a cube?', a: ['8'], h: 'Count the corners' },
-                    { type: 'i', icon: '⚙️', q: 'The screw-like part in gears is?', a: ['worm'], h: 'Long with spiral lines' }
+                    { type: 'c', icon: '⛺', q: 'What is a tent?', a: 'pyramid' },
+                    { type: 'i', icon: '❓', q: 'How many vertices on a cube?', a: ['8'] },
+                    { type: 'i', icon: '🍦', q: 'How many vertices on a cone?', a: ['1'] },
+                    { type: 'c', icon: '🎲', q: 'What is a dice?', a: 'prism' },
+                    { type: 'i', icon: '⚽', q: 'How many flat faces on a sphere?', a: ['0'] },
+                    { type: 'c', icon: '🥪', q: 'What is a sandwich?', a: 'prism' }
                 ]
             }
         };
 
         let lang = 'zh';
         let score = 0;
-        let isGameMode = false;
-        let currentQuiz = null;
+        let questionCount = 0;
+        let quizPool = [];
 
         // Three.js
         let scene, camera, renderer, controls, raycaster, mouse;
@@ -195,7 +218,6 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             raycaster = new THREE.Raycaster();
-            raycaster.params.Line.threshold = 0.2;
             mouse = new THREE.Vector2();
             scene.add(currentGroup);
             window.addEventListener('resize', onResize);
@@ -273,12 +295,91 @@
             } else { tip.style.display = 'none'; }
         }
 
-        // Game Logic
-        function toggleMode() {
-            isGameMode = !isGameMode;
-            document.getElementById('game-layer').style.display = isGameMode ? 'flex' : 'none';
-            document.getElementById('modeText').innerText = isGameMode ? i18n[lang].mode_explore : i18n[lang].mode_game;
-            if(isGameMode) nextQuiz();
+        // 遊戲核心邏輯
+        function startChallenge() {
+            score = 0;
+            questionCount = 0;
+            // 打亂題目池
+            quizPool = [...i18n[lang].quizzes].sort(() => Math.random() - 0.5);
+            document.getElementById('game-layer').style.display = 'flex';
+            document.getElementById('quiz-screen').style.display = 'block';
+            document.getElementById('result-screen').style.display = 'none';
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (questionCount >= 6) {
+                showResult();
+                return;
+            }
+            questionCount++;
+            const q = quizPool[questionCount - 1];
+            document.getElementById('quiz-progress').innerText = i18n[lang].progress + questionCount + " / 6";
+            document.getElementById('qIcon').innerText = q.icon;
+            document.getElementById('qText').innerText = q.q;
+            document.getElementById('feedback').innerText = '';
+            
+            const area = document.getElementById('gameArea');
+            area.innerHTML = '';
+            
+            if (q.type === 'c') {
+                area.innerHTML = `
+                    <div class="ans-grid">
+                        <button class="ans-btn" onclick="checkChoice('prism', this)">${i18n[lang].prism}</button>
+                        <button class="ans-btn" onclick="checkChoice('pyramid', this)">${i18n[lang].pyramid}</button>
+                        <button class="ans-btn" onclick="checkChoice('sphere', this)">${i18n[lang].sphere}</button>
+                    </div>`;
+            } else {
+                area.innerHTML = `
+                    <div class="input-area">
+                        <input type="text" id="ansIn" class="game-input" placeholder="...">
+                        <button class="submit-btn" onclick="checkInput()">${i18n[lang].check}</button>
+                    </div>`;
+            }
+        }
+
+        function checkChoice(a, btn) {
+            const q = quizPool[questionCount - 1];
+            const isOk = a === q.a;
+            if (isOk) score += 10;
+            btn.classList.add(isOk ? 'correct' : 'wrong');
+            showFeedback(isOk);
+        }
+
+        function checkInput() {
+            const q = quizPool[questionCount - 1];
+            const val = document.getElementById('ansIn').value.trim();
+            const isOk = q.a.includes(val);
+            if (isOk) score += 10;
+            showFeedback(isOk);
+        }
+
+        function skipQuestion() {
+            showFeedback(null); // 略過不計分
+        }
+
+        function showFeedback(ok) {
+            const f = document.getElementById('feedback');
+            if (ok === null) {
+                f.innerText = "略過題目 Skip...";
+                f.style.color = "#aaa";
+            } else {
+                f.innerText = ok ? i18n[lang].correct : i18n[lang].wrong;
+                f.style.color = ok ? 'var(--success)' : 'var(--error)';
+            }
+            setTimeout(nextQuestion, 1000);
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('resTitle').innerText = i18n[lang].finish;
+            document.getElementById('resScore').innerText = score;
+            document.getElementById('resFeedback').innerText = score >= 40 ? i18n[lang].feedback_good : i18n[lang].feedback_keep;
+        }
+
+        function exitGame() {
+            document.getElementById('game-layer').style.display = 'none';
         }
 
         function toggleLang() {
@@ -287,60 +388,15 @@
         }
 
         function updateUI() {
-            document.getElementById('modeText').innerText = isGameMode ? i18n[lang].mode_explore : i18n[lang].mode_game;
-            document.getElementById('txtScore').innerText = i18n[lang].score + score;
+            document.getElementById('modeText').innerText = i18n[lang].challenge;
             const activeBtn = document.querySelector('.shape-btn.active');
             if(activeBtn) {
                 const type = activeBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
                 loadShape(type);
             }
-            if(isGameMode) renderQuiz();
-        }
-
-        function nextQuiz() {
-            currentQuiz = i18n[lang].quizzes[Math.floor(Math.random() * i18n[lang].quizzes.length)];
-            renderQuiz();
-        }
-
-        function renderQuiz() {
-            document.getElementById('qIcon').innerText = currentQuiz.icon;
-            document.getElementById('qText').innerText = currentQuiz.q;
-            document.getElementById('feedback').innerText = '';
-            const area = document.getElementById('gameArea');
-            area.innerHTML = '';
-            if(currentQuiz.type === 'c') {
-                const grid = document.createElement('div');
-                grid.className = 'ans-grid';
-                grid.innerHTML = `<button class="ans-btn" onclick="checkAnswer('prism', this)">${i18n[lang].prism}</button>
-                                  <button class="ans-btn" onclick="checkAnswer('pyramid', this)">${i18n[lang].pyramid}</button>
-                                  <button class="ans-btn" onclick="checkAnswer('sphere', this)">${i18n[lang].sphere}</button>`;
-                area.appendChild(grid);
-            } else {
-                area.innerHTML = `<div class="input-area"><input type="text" id="ansIn" class="game-input" placeholder="...">
-                                  <button class="submit-btn" onclick="checkInput()">${i18n[lang].check}</button></div>`;
-            }
-        }
-
-        function checkAnswer(a, btn) {
-            const isOk = a === currentQuiz.a;
-            showResult(isOk, btn);
-        }
-
-        function checkInput() {
-            const val = document.getElementById('ansIn').value.trim().toLowerCase();
-            const isOk = currentQuiz.a.some(ans => val.includes(ans.toLowerCase()));
-            showResult(isOk, document.querySelector('.submit-btn'));
-        }
-
-        function showResult(ok, el) {
-            const f = document.getElementById('feedback');
-            f.innerText = ok ? i18n[lang].correct : i18n[lang].wrong;
-            f.style.color = ok ? 'var(--success)' : 'var(--error)';
-            if(ok) {
-                score += 10;
-                document.getElementById('txtScore').innerText = i18n[lang].score + score;
-                setTimeout(nextQuiz, 1200);
-            }
+            // 翻譯 UI 元素
+            document.getElementById('btnSkip').innerText = i18n[lang].skip;
+            document.getElementById('btnBack').innerText = lang === 'zh' ? "返回主選單" : "Back Home";
         }
 
         init3D();
