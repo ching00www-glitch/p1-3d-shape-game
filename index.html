@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D 形狀小奇兵 4.0 Pro</title>
+    <title>3D 形狀小奇兵 5.0 Ultra</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
@@ -25,16 +25,10 @@
         
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top:0; left:0; z-index: 1; }
 
-        /* UI 層 */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
 
-        header { 
-            pointer-events: auto; margin: 15px; padding: 15px 25px;
-            background: none; /* Logo 退地 */
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        header { pointer-events: auto; margin: 15px; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Logo 放大與退地 */
         .logo-box { width: 280px; height: 120px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .logo-box img { width: 100%; height: 100%; object-fit: contain; }
         
@@ -43,23 +37,20 @@
         .mode-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 1.3rem; box-shadow: 0 6px 0 #CC4A4A; }
 
         .info-card { 
-            pointer-events: auto; position: absolute; top: 150px; left: 25px; width: 300px;
+            pointer-events: auto; position: absolute; top: 160px; left: 25px; width: 300px;
             background: var(--card); padding: 25px; border-radius: 30px; border: 4px solid var(--secondary);
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         .info-card h2 { margin: 0; color: var(--secondary); font-size: 1.8rem; }
-        .info-card p { margin: 10px 0; font-size: 1.2rem; color: #333; line-height: 1.4; }
+        .info-card p { margin: 10px 0; font-size: 1.2rem; color: #333; }
 
-        /* 底部按鈕放大 */
         .controls-bar { pointer-events: auto; display: flex; gap: 15px; overflow-x: auto; padding: 20px; background: white; border-top: 5px solid var(--primary); }
         .shape-btn { 
             background: #fff; border: 3px solid var(--primary); padding: 15px 30px; border-radius: 40px; 
             font-weight: bold; color: var(--primary); white-space: nowrap; cursor: pointer; font-size: 1.3rem;
-            transition: 0.2s;
         }
         .shape-btn.active { background: var(--primary); color: white; transform: scale(1.1); }
 
-        /* 挑戰模式介面放大 */
         #game-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
         .quiz-box { background: white; width: 90%; max-width: 600px; border-radius: 50px; padding: 40px; text-align: center; border: 8px solid var(--secondary); }
         .ans-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 30px; }
@@ -135,7 +126,7 @@
                     cone: ["圓錐體", "像派對帽，只有一個尖頂。"],
                     sq_pyramid: ["四角錐", "底面是方形，側面是三角形。"],
                     tri_prism: ["三角柱", "底面是三角形，側面是長方形。"],
-                    sphere: ["球體", "圓溜溜的，沒有頂點。"]
+                    sphere: ["球體", "圓溜溜的，我是 3D 立體的喔！"]
                 },
                 quizzes: [
                     { t: 'c', i: '📦', q: '快遞紙箱屬於哪一類？', a: 'prism' },
@@ -156,16 +147,8 @@
                     cone: ["Cone", "Has 1 sharp vertex."],
                     sq_pyramid: ["Sq. Pyramid", "Square base and triangles."],
                     tri_prism: ["Tri. Prism", "Triangular bases."],
-                    sphere: ["Sphere", "Round and 3D!"]
-                },
-                quizzes: [
-                    { t: 'c', i: '📦', q: 'What is a box?', a: 'prism' },
-                    { t: 'c', i: '⚽', q: 'What is a ball?', a: 'sphere' },
-                    { t: 'c', i: '⛺', q: 'What is this tent?', a: 'prism' },
-                    { t: 'i', i: '❓', q: 'Vertices on a cube?', a: ['8'] },
-                    { t: 'i', i: '🍦', q: 'Vertices on a cone?', a: ['1'] },
-                    { t: 'i', i: '⚽', q: 'Flat faces on a sphere?', a: ['0'] }
-                ]
+                    sphere: ["Sphere", "Look! I am 3D and round!"]
+                }
             }
         };
 
@@ -182,16 +165,14 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // 光影優化：讓球體變立體
-            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-            const spotLight = new THREE.SpotLight(0xffffff, 0.8);
-            spotLight.position.set(5, 10, 5);
-            spotLight.castShadow = true;
-            scene.add(spotLight);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+            const mainLight = new THREE.SpotLight(0xffffff, 1);
+            mainLight.position.set(5, 10, 5);
+            scene.add(mainLight);
             
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-            fillLight.position.set(-5, 0, -5);
-            scene.add(fillLight);
+            const backLight = new THREE.PointLight(0xffffff, 0.5);
+            backLight.position.set(-5, 2, -5);
+            scene.add(backLight);
 
             raycaster = new THREE.Raycaster();
             raycaster.params.Line.threshold = 0.3; 
@@ -226,31 +207,37 @@
             else if(type==='cone') { geo = new THREE.ConeGeometry(1.4,2.8,32); vPos=[[0,1.4,0]]; }
             else if(type==='sq_pyramid') { geo = new THREE.ConeGeometry(1.8,2.8,4); geo.rotateY(Math.PI/4); vPos=[[0,1.4,0],[1.27,-1.4,1.27],[-1.27,-1.4,1.27],[1.27,-1.4,-1.27],[-1.27,-1.4,-1.27]]; }
             else if(type==='tri_prism') { geo = new THREE.CylinderGeometry(1.4,1.4,2.8,3); vPos=[[0,1.4,1.4],[1.2,1.4,-0.7],[-1.2,1.4,-0.7],[0,-1.4,1.4],[1.2,-1.4,-0.7],[-1.2,-1.4,-0.7]]; }
-            else if(type==='sphere') geo = new THREE.SphereGeometry(1.5,48,48); // 增加精細度
+            else if(type==='sphere') geo = new THREE.SphereGeometry(1.5,64,64);
 
-            // 真 3D 材質
-            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-                color: 0x4f46e5, 
-                metalness: 0.1, 
-                roughness: 0.3,
-                transparent: true,
-                opacity: 0.95
-            }));
+            const meshMat = new THREE.MeshStandardMaterial({
+                color: 0x4f46e5, metalness: 0.2, roughness: 0.2, transparent: true, opacity: 0.95
+            });
+            const mesh = new THREE.Mesh(geo, meshMat);
             mesh.userData = { type: 'face', label: i18n[lang].face };
             currentGroup.add(mesh);
             interactables.push(mesh);
 
             if(type!=='sphere') {
-                const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xffffff, linewidth:3}));
+                const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xffffff, linewidth:4}));
                 lines.userData = { type: 'edge', label: i18n[lang].edge };
+                lines.renderOrder = 10; // 邊始終在面上
                 currentGroup.add(lines);
                 interactables.push(lines);
             }
 
+            // 頂點修復核心：強制最上層渲染
+            const vMat = new THREE.MeshBasicMaterial({
+                color: 0xFF5E5E, 
+                transparent: true, 
+                opacity: 0,
+                depthTest: false // 關鍵：不進行深度測試，永不消失
+            });
+
             vPos.forEach(p => {
-                const v = new THREE.Mesh(new THREE.SphereGeometry(0.28), new THREE.MeshBasicMaterial({color: 0xFF5E5E, transparent:true, opacity:0}));
+                const v = new THREE.Mesh(new THREE.SphereGeometry(0.25), vMat.clone());
                 v.position.set(p[0], p[1], p[2]);
                 v.userData = { type: 'vertex', label: i18n[lang].vertex };
+                v.renderOrder = 999; // 絕對最上層
                 mesh.add(v); 
                 interactables.push(v);
             });
@@ -266,10 +253,9 @@
             const tip = document.getElementById('cursor-tooltip');
             
             if(intersects.length > 0) {
+                // 優先選擇頂點
                 const hit = intersects.find(o=>o.object.userData.type==='vertex') || intersects.find(o=>o.object.userData.type==='edge') || intersects[0];
-                tip.style.display = 'block'; 
-                tip.style.left = e.clientX+15+'px'; 
-                tip.style.top = e.clientY+15+'px';
+                tip.style.display = 'block'; tip.style.left = e.clientX+15+'px'; tip.style.top = e.clientY+15+'px';
                 tip.innerText = hit.object.userData.label;
                 
                 if(hovered !== hit.object) {
